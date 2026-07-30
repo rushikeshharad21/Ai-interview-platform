@@ -1,0 +1,26 @@
+import api from "./api.js";
+
+export const getMyInterviewsAsCandidate = async () => {
+  const response = await api.get("/interviews/candidate/my");
+  return response.data;
+};
+
+export const getMyInterviewsAsRecruiter = async () => {
+  const response = await api.get("/interviews/recruiter/my");
+  return response.data;
+};
+
+export const getInterviewById = async (interviewId) => {
+  const response = await api.get(`/interviews/${interviewId}`);
+  return response.data;
+};
+
+export const scheduleInterview = async (payload) => {
+  const response = await api.post("/interviews", payload);
+  return response.data;
+};
+
+export const updateInterviewStatus = async (interviewId, status) => {
+  const response = await api.patch(`/interviews/${interviewId}/status`, { status });
+  return response.data;
+};
