@@ -39,6 +39,10 @@ const interviewSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    questions: {
+      type: [String],
+      default: [],
+    },
   },
   { timestamps: true }
 );

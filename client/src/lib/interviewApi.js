@@ -24,3 +24,13 @@ export const updateInterviewStatus = async (interviewId, status) => {
   const response = await api.patch(`/interviews/${interviewId}/status`, { status });
   return response.data;
 };
+
+export const generateQuestions = async (interviewId) => {
+  const response = await api.post(`/interviews/${interviewId}/generate-questions`);
+  return response.data;
+};
+
+export const updateQuestions = async (interviewId, questions) => {
+  const response = await api.patch(`/interviews/${interviewId}/questions`, { questions });
+  return response.data;
+};

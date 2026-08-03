@@ -7,6 +7,8 @@ import {
   getMyInterviewsAsRecruiter,
   getInterviewById,
   updateInterviewStatus,
+  generateQuestions,
+  updateQuestions,
 } from "../controllers/interviewController.js";
 
 const router = express.Router();
@@ -16,5 +18,7 @@ router.get("/candidate/my", protect, getMyInterviewsAsCandidate);
 router.get("/recruiter/my", protect, requireRole("recruiter"), getMyInterviewsAsRecruiter);
 router.get("/:id", protect, getInterviewById);
 router.patch("/:id/status", protect, requireRole("recruiter"), updateInterviewStatus);
+router.post("/:id/generate-questions", protect, requireRole("recruiter"), generateQuestions);
+router.patch("/:id/questions", protect, requireRole("recruiter"), updateQuestions);
 
 export default router;

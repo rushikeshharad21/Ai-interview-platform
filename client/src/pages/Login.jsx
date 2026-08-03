@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
-import { Lock, Mail, ArrowRight } from "lucide-react"
+import { Lock, Mail, ArrowRight, AlertCircle } from "lucide-react"
 import api from "../lib/api"
 import useAuthStore from "../store/authStore"
 import Input from "../components/ui/Input"
@@ -28,7 +28,11 @@ export default function Login() {
       login(response.data.user, response.data.token)
       navigate("/dashboard")
     } catch (err) {
-      setError(err.response?.data?.message || "Something went wrong")
+      if (!err.response) {
+        setError("Network error. Please check your connection and try again.")
+      } else {
+        setError(err.response?.data?.message || "Something went wrong. Please try again.")
+      }
     } finally {
       setLoading(false)
     }
@@ -62,6 +66,7 @@ export default function Login() {
             placeholder="you@example.com"
             value={formData.email}
             onChange={handleChange}
+            disabled={loading}
             required
           />
           <Input
@@ -72,11 +77,15 @@ export default function Login() {
             placeholder="••••••••"
             value={formData.password}
             onChange={handleChange}
+            disabled={loading}
             required
           />
 
           {error && (
-            <p className="text-sm text-[var(--color-error)]">{error}</p>
+            <div className="flex items-start gap-2 text-sm text-[var(--color-error)] bg-red-50 rounded-[var(--radius-control)] p-3">
+              <AlertCircle size={16} className="mt-0.5 shrink-0" />
+              <p>{error}</p>
+            </div>
           )}
 
           <button

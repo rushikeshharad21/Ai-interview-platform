@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Calendar, Clock, User, Briefcase } from "lucide-react";
+import { Calendar, Clock, User, Briefcase, AlertCircle } from "lucide-react";
 import Card from "../components/ui/Card.jsx";
 import Button from "../components/ui/Button.jsx";
 import StatusBadge from "../components/ui/StatusBadge.jsx";
@@ -30,18 +30,25 @@ const UpcomingInterviews = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const fetchInterviews = async () => {
-      try {
-        const data = await getMyInterviewsAsCandidate();
-        setInterviews(data);
-      } catch (err) {
-        setError("Error occurred while fetching interviews");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchInterviews = async () => {
+    setLoading(true);
+    setError("");
 
+    try {
+      const data = await getMyInterviewsAsCandidate();
+      setInterviews(data);
+    } catch (err) {
+      if (!err.response) {
+        setError("Network error. Please check your connection and try again.");
+      } else {
+        setError("Could not load your interviews. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchInterviews();
   }, []);
 
@@ -57,7 +64,13 @@ const UpcomingInterviews = () => {
   if (error) {
     return (
       <Card>
-        <p className="text-[var(--color-error)]">{error}</p>
+        <div className="flex flex-col items-center text-center py-8 gap-3">
+          <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center">
+            <AlertCircle size={24} className="text-[var(--color-error)]" />
+          </div>
+          <p className="text-[var(--color-text-secondary)] max-w-sm">{error}</p>
+          <Button onClick={fetchInterviews} className="mt-2">Try again</Button>
+        </div>
       </Card>
     );
   }

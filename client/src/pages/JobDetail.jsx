@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { MapPin, Calendar, Building2, CheckCircle2 } from "lucide-react"
+import { MapPin, Calendar, Building2, CheckCircle2, AlertCircle } from "lucide-react"
 import { getJobById } from "../lib/jobApi"
 import { applyToJob } from "../lib/applicationApi"
 import useAuthStore from "../store/authStore"
 import Card from "../components/ui/Card"
 import Badge from "../components/ui/Badge"
+import Button from "../components/ui/Button"
 
 const employmentLabels = {
   "full-time": "Full-time",
@@ -23,15 +24,25 @@ export default function JobDetail() {
   const [loading, setLoading] = useState(true)
   const [applying, setApplying] = useState(false)
   const [applied, setApplied] = useState(false)
-  const [error, setError] = useState("")
+  const [fetchError, setFetchError] = useState("")
+  const [applyError, setApplyError] = useState("")
 
   useEffect(() => {
     const fetchJob = async () => {
+      setLoading(true)
+      setFetchError("")
+
       try {
         const response = await getJobById(id)
         setJob(response.data)
       } catch (err) {
-        setError("Job not found")
+        if (!err.response) {
+          setFetchError("Network error. Please check your connection and try again.")
+        } else if (err.response.status === 404) {
+          setFetchError("This job posting could not be found. It may have been removed.")
+        } else {
+          setFetchError("Could not load this job. Please try again.")
+        }
       } finally {
         setLoading(false)
       }
@@ -42,13 +53,17 @@ export default function JobDetail() {
 
   const handleApply = async () => {
     setApplying(true)
-    setError("")
+    setApplyError("")
 
     try {
       await applyToJob(id)
       setApplied(true)
     } catch (err) {
-      setError(err.response?.data?.message || "Something went wrong")
+      if (!err.response) {
+        setApplyError("Network error. Please check your connection and try again.")
+      } else {
+        setApplyError(err.response?.data?.message || "Something went wrong. Please try again.")
+      }
     } finally {
       setApplying(false)
     }
@@ -59,7 +74,33 @@ export default function JobDetail() {
   }
 
   if (!job) {
-    return <p className="text-[var(--color-text-secondary)]">{error || "Job not found"}</p>
+    return (
+      <div className="max-w-2xl flex flex-col gap-4">
+        <button
+          onClick={() => navigate("/jobs")}
+          className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] transition-colors duration-150 self-start"
+        >
+          ← Back to jobs
+        </button>
+
+        <Card>
+          <div className="flex flex-col items-center text-center py-8 gap-3">
+            <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center">
+              <AlertCircle size={24} className="text-[var(--color-error)]" />
+            </div>
+            <h1 className="text-lg font-semibold text-[var(--color-text-primary)]">
+              Unable to Load Job
+            </h1>
+            <p className="text-sm text-[var(--color-text-secondary)] max-w-sm">
+              {fetchError || "Job not found"}
+            </p>
+            <Button onClick={() => navigate("/jobs")} className="mt-2">
+              Back to jobs
+            </Button>
+          </div>
+        </Card>
+      </div>
+    )
   }
 
   return (
@@ -120,7 +161,12 @@ export default function JobDetail() {
           </div>
         </div>
 
-        {error && <p className="text-sm text-[var(--color-error)]">{error}</p>}
+        {applyError && (
+          <div className="flex items-start gap-2 text-sm text-[var(--color-error)] bg-red-50 rounded-[var(--radius-control)] p-3">
+            <AlertCircle size={16} className="mt-0.5 shrink-0" />
+            <p>{applyError}</p>
+          </div>
+        )}
 
         {user?.role === "candidate" && (
           <div className="pt-2 border-t border-[var(--color-border)]">

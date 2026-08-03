@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { Briefcase } from "lucide-react"
+import { Briefcase, AlertCircle } from "lucide-react"
 import { createJob } from "../lib/jobApi"
 import Input from "../components/ui/Input"
 import Textarea from "../components/ui/Textarea"
@@ -40,7 +40,11 @@ export default function PostJob() {
       await createJob({ ...formData, requiredSkills: skills })
       navigate("/jobs/manage")
     } catch (err) {
-      setError(err.response?.data?.message || "Something went wrong")
+      if (!err.response) {
+        setError("Network error. Please check your connection and try again.")
+      } else {
+        setError(err.response?.data?.message || "Something went wrong. Please try again.")
+      }
     } finally {
       setLoading(false)
     }
@@ -69,6 +73,7 @@ export default function PostJob() {
           placeholder="e.g. Frontend Developer"
           value={formData.title}
           onChange={handleChange}
+          disabled={loading}
           required
         />
 
@@ -79,10 +84,11 @@ export default function PostJob() {
           placeholder="Describe the role, responsibilities, and expectations"
           value={formData.description}
           onChange={handleChange}
+          disabled={loading}
           required
         />
 
-        <SkillInput label="Required skills" skills={skills} onChange={setSkills} />
+        <SkillInput label="Required skills" skills={skills} onChange={setSkills} disabled={loading} />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input
@@ -91,6 +97,7 @@ export default function PostJob() {
             placeholder="Remote / City name"
             value={formData.location}
             onChange={handleChange}
+            disabled={loading}
           />
           <Select
             label="Employment type"
@@ -98,10 +105,16 @@ export default function PostJob() {
             options={employmentOptions}
             value={formData.employmentType}
             onChange={handleChange}
+            disabled={loading}
           />
         </div>
 
-        {error && <p className="text-sm text-[var(--color-error)]">{error}</p>}
+        {error && (
+          <div className="flex items-start gap-2 text-sm text-[var(--color-error)] bg-red-50 rounded-[var(--radius-control)] p-3">
+            <AlertCircle size={16} className="mt-0.5 shrink-0" />
+            <p>{error}</p>
+          </div>
+        )}
 
         <div className="flex gap-3">
           <button
@@ -114,7 +127,8 @@ export default function PostJob() {
           <button
             type="button"
             onClick={() => navigate("/jobs/manage")}
-            className="rounded-[var(--radius-control)] border border-[var(--color-border)] px-6 py-2.5 text-sm font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-surface)] transition-colors duration-150"
+            disabled={loading}
+            className="rounded-[var(--radius-control)] border border-[var(--color-border)] px-6 py-2.5 text-sm font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-surface)] transition-colors duration-150 disabled:opacity-50"
           >
             Cancel
           </button>

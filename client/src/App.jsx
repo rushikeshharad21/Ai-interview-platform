@@ -11,6 +11,7 @@ import JobApplications from "./pages/JobApplications"
 import UpcomingInterviews from "./pages/UpcomingInterviews.jsx";
 import InterviewPreview from "./pages/InterviewPreview.jsx";
 import InterviewSession from "./pages/InterviewSession.jsx";
+import RecruiterInterviews from "./pages/RecruiterInterviews.jsx";
 
 function App() {
   const user = useAuthStore((state) => state.user)
@@ -28,10 +29,11 @@ function App() {
           <Route path="/interviews" element={<UpcomingInterviews />} />
           <Route path="/interviews/:id/preview" element={<InterviewPreview />} />
           <Route path="/interviews/:id/session" element={<InterviewSession />} />
+          <Route path="/interviews/manage" element={<RecruiterInterviews />} />
         <Route path="/jobs/manage" element={<ManageJobs />} />
         <Route path="/jobs/:jobId/applications" element={<JobApplications />} />
           <Route path="/jobs/new" element={<PostJob />} />
-          <Route path="/applications" element={<div>Applications page</div>} />
+         
         </Route>
 
         <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} replace />} />

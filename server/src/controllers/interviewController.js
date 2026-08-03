@@ -1,31 +1,32 @@
 import Interview from "../models/Interview.js";
 import Application from "../models/Application.js";
 import Job from "../models/Job.js";
+import { generateContent } from "../services/geminiService.js";
 
 export const scheduleInterview = async (req, res) => {
   try {
     const { applicationId, scheduledAt, duration, notes } = req.body;
 
     if (!applicationId || !scheduledAt) {
-      return res.status(400).json({ message: "applicationId आणि scheduledAt आवश्यक आहेत" });
+      return res.status(400).json({ message: "applicationId and scheduledAt are required" });
     }
 
     const application = await Application.findById(applicationId).populate("job");
 
     if (!application) {
-      return res.status(404).json({ message: "Application सापडलं नाही" });
+      return res.status(404).json({ message: "Application not found" });
     }
 
     const job = application.job;
 
     if (job.recruiter.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: "हे application तुमच्या jobs पैकी नाही" });
+      return res.status(403).json({ message: "This application does not belong to your jobs" });
     }
 
     const existingInterview = await Interview.findOne({ application: applicationId });
 
     if (existingInterview) {
-      return res.status(400).json({ message: "या application साठी आधीच interview schedule आहे" });
+      return res.status(400).json({ message: "An interview is already scheduled for this application" });
     }
 
     const interview = await Interview.create({
@@ -43,7 +44,7 @@ export const scheduleInterview = async (req, res) => {
 
     res.status(201).json(interview);
   } catch (error) {
-    res.status(500).json({ message: "Interview schedule करताना त्रुटी आली", error: error.message });
+    res.status(500).json({ message: "Error occurred while scheduling interview", error: error.message });
   }
 };
 
@@ -56,7 +57,7 @@ export const getMyInterviewsAsCandidate = async (req, res) => {
 
     res.status(200).json(interviews);
   } catch (error) {
-    res.status(500).json({ message: "Interviews आणताना त्रुटी आली", error: error.message });
+    res.status(500).json({ message: "Error occurred while fetching interviews", error: error.message });
   }
 };
 
@@ -69,7 +70,7 @@ export const getMyInterviewsAsRecruiter = async (req, res) => {
 
     res.status(200).json(interviews);
   } catch (error) {
-    res.status(500).json({ message: "Interviews आणताना त्रुटी आली", error: error.message });
+    res.status(500).json({ message: "Error occurred while fetching interviews", error: error.message });
   }
 };
 
@@ -81,19 +82,19 @@ export const getInterviewById = async (req, res) => {
       .populate("recruiter", "name email");
 
     if (!interview) {
-      return res.status(404).json({ message: "Interview सापडलं नाही" });
+      return res.status(404).json({ message: "Interview not found" });
     }
 
     const isCandidate = interview.candidate._id.toString() === req.user._id.toString();
     const isRecruiter = interview.recruiter._id.toString() === req.user._id.toString();
 
     if (!isCandidate && !isRecruiter) {
-      return res.status(403).json({ message: "हे interview बघण्याची परवानगी नाही" });
+      return res.status(403).json({ message: "Not authorized to view this interview" });
     }
 
     res.status(200).json(interview);
   } catch (error) {
-    res.status(500).json({ message: "Interview आणताना त्रुटी आली", error: error.message });
+    res.status(500).json({ message: "Error occurred while fetching interview", error: error.message });
   }
 };
 
@@ -103,17 +104,17 @@ export const updateInterviewStatus = async (req, res) => {
     const allowedStatuses = ["scheduled", "completed", "cancelled"];
 
     if (!allowedStatuses.includes(status)) {
-      return res.status(400).json({ message: "अवैध status" });
+      return res.status(400).json({ message: "Invalid status" });
     }
 
     const interview = await Interview.findById(req.params.id);
 
     if (!interview) {
-      return res.status(404).json({ message: "Interview सापडलं नाही" });
+      return res.status(404).json({ message: "Interview not found" });
     }
 
     if (interview.recruiter.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: "हे interview update करण्याची परवानगी नाही" });
+      return res.status(403).json({ message: "Not authorized to update this interview" });
     }
 
     interview.status = status;
@@ -121,6 +122,96 @@ export const updateInterviewStatus = async (req, res) => {
 
     res.status(200).json(interview);
   } catch (error) {
-    res.status(500).json({ message: "Interview update करताना त्रुटी आली", error: error.message });
+    res.status(500).json({ message: "Error occurred while updating interview", error: error.message });
+  }
+};
+
+const buildQuestionPrompt = (jobTitle, jobDescription, requiredSkills) => {
+  return `You are an expert technical interviewer. Based on the job details below, generate exactly 5 interview questions.
+
+Job Title: ${jobTitle}
+Job Description: ${jobDescription}
+Required Skills: ${requiredSkills.join(", ")}
+
+Rules:
+- Mix of technical and behavioral questions relevant to this specific role
+- Each question should be answerable in 1-2 minutes
+- Return ONLY a valid JSON array of 5 strings, nothing else
+- Do not include markdown code fences, numbering, or any extra text
+
+Example format: ["Question one?", "Question two?", "Question three?", "Question four?", "Question five?"]`;
+};
+
+const parseQuestionsFromResponse = (rawText) => {
+  const cleanedText = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
+  const parsed = JSON.parse(cleanedText);
+
+  if (!Array.isArray(parsed)) {
+    throw new Error("Response was not an array");
+  }
+
+  return parsed;
+};
+
+export const generateQuestions = async (req, res) => {
+  try {
+    const interview = await Interview.findById(req.params.id).populate("job");
+
+    if (!interview) {
+      return res.status(404).json({ message: "Interview not found" });
+    }
+
+    if (interview.recruiter.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Not authorized to generate questions for this interview" });
+    }
+
+    const job = interview.job;
+
+    const prompt = buildQuestionPrompt(job.title, job.description, job.requiredSkills);
+    const rawResponse = await generateContent(prompt);
+
+    let questions;
+    try {
+      questions = parseQuestionsFromResponse(rawResponse);
+    } catch (parseError) {
+      return res.status(502).json({
+        message: "Gemini returned an unexpected format, please try again",
+        rawResponse,
+      });
+    }
+
+    interview.questions = questions;
+    await interview.save();
+
+    res.status(200).json({ questions: interview.questions });
+  } catch (error) {
+    res.status(500).json({ message: "Error generating questions", error: error.message });
+  }
+};
+
+export const updateQuestions = async (req, res) => {
+  try {
+    const { questions } = req.body;
+
+    if (!Array.isArray(questions) || questions.some((question) => typeof question !== "string" || !question.trim())) {
+      return res.status(400).json({ message: "questions must be a non-empty array of non-empty strings" });
+    }
+
+    const interview = await Interview.findById(req.params.id);
+
+    if (!interview) {
+      return res.status(404).json({ message: "Interview not found" });
+    }
+
+    if (interview.recruiter.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Not authorized to edit questions for this interview" });
+    }
+
+    interview.questions = questions;
+    await interview.save();
+
+    res.status(200).json({ questions: interview.questions });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating questions", error: error.message });
   }
 };

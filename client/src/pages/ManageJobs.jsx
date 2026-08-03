@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { Plus, Users, MapPin, Calendar } from "lucide-react"
+import { Plus, Users, MapPin, Calendar, AlertCircle } from "lucide-react"
 import { getMyJobs } from "../lib/jobApi"
 import Card from "../components/ui/Card"
 import Badge from "../components/ui/Badge"
+import Button from "../components/ui/Button"
 
 const employmentLabels = {
   "full-time": "Full-time",
@@ -16,17 +17,27 @@ export default function ManageJobs() {
   const navigate = useNavigate()
   const [jobs, setJobs] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+
+  const fetchJobs = async () => {
+    setLoading(true)
+    setError("")
+
+    try {
+      const response = await getMyJobs()
+      setJobs(response.data)
+    } catch (err) {
+      if (!err.response) {
+        setError("Network error. Please check your connection and try again.")
+      } else {
+        setError("Could not load your jobs. Please try again.")
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    const fetchJobs = async () => {
-      try {
-        const response = await getMyJobs()
-        setJobs(response.data)
-      } finally {
-        setLoading(false)
-      }
-    }
-
     fetchJobs()
   }, [])
 
@@ -38,7 +49,7 @@ export default function ManageJobs() {
             My jobs
           </h1>
           <p className="text-sm text-[var(--color-text-secondary)]">
-            {jobs.length} posted positions
+            {loading ? "Loading positions..." : `${jobs.length} posted positions`}
           </p>
         </div>
         <button
@@ -55,6 +66,14 @@ export default function ManageJobs() {
           {[1, 2, 3].map((i) => (
             <div key={i} className="h-24 rounded-[var(--radius-card)] bg-[var(--color-surface)] animate-pulse" />
           ))}
+        </div>
+      ) : error ? (
+        <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
+          <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center">
+            <AlertCircle size={24} className="text-[var(--color-error)]" />
+          </div>
+          <p className="text-[var(--color-text-secondary)] max-w-sm">{error}</p>
+          <Button onClick={fetchJobs}>Try again</Button>
         </div>
       ) : jobs.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center gap-3">

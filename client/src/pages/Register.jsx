@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
-import { User, Mail, Lock, ArrowRight, Briefcase, UserCircle } from "lucide-react"
+import { User, Mail, Lock, ArrowRight, Briefcase, UserCircle, AlertCircle } from "lucide-react"
 import api from "../lib/api"
 import useAuthStore from "../store/authStore"
 import Input from "../components/ui/Input"
@@ -34,7 +34,11 @@ export default function Register() {
       login(response.data.user, response.data.token)
       navigate("/dashboard")
     } catch (err) {
-      setError(err.response?.data?.message || "Something went wrong")
+      if (!err.response) {
+        setError("Network error. Please check your connection and try again.")
+      } else {
+        setError(err.response?.data?.message || "Something went wrong. Please try again.")
+      }
     } finally {
       setLoading(false)
     }
@@ -63,8 +67,9 @@ export default function Register() {
           <button
             type="button"
             onClick={() => setFormData({ ...formData, role: "candidate" })}
+            disabled={loading}
             className={cn(
-              "flex-1 flex flex-col items-center gap-1.5 rounded-[var(--radius-control)] border py-3 text-sm font-medium transition-all duration-150",
+              "flex-1 flex flex-col items-center gap-1.5 rounded-[var(--radius-control)] border py-3 text-sm font-medium transition-all duration-150 disabled:opacity-50",
               formData.role === "candidate"
                 ? "border-[var(--color-accent)] bg-[var(--color-accent)]/10 text-[var(--color-accent)]"
                 : "border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface)]"
@@ -76,8 +81,9 @@ export default function Register() {
           <button
             type="button"
             onClick={() => setFormData({ ...formData, role: "recruiter" })}
+            disabled={loading}
             className={cn(
-              "flex-1 flex flex-col items-center gap-1.5 rounded-[var(--radius-control)] border py-3 text-sm font-medium transition-all duration-150",
+              "flex-1 flex flex-col items-center gap-1.5 rounded-[var(--radius-control)] border py-3 text-sm font-medium transition-all duration-150 disabled:opacity-50",
               formData.role === "recruiter"
                 ? "border-[var(--color-accent)] bg-[var(--color-accent)]/10 text-[var(--color-accent)]"
                 : "border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface)]"
@@ -97,6 +103,7 @@ export default function Register() {
             placeholder="rushi harad"
             value={formData.name}
             onChange={handleChange}
+            disabled={loading}
             required
           />
           <Input
@@ -107,6 +114,7 @@ export default function Register() {
             placeholder="you@gmail.com"
             value={formData.email}
             onChange={handleChange}
+            disabled={loading}
             required
           />
           <Input
@@ -117,11 +125,15 @@ export default function Register() {
             placeholder="••••••••"
             value={formData.password}
             onChange={handleChange}
+            disabled={loading}
             required
           />
 
           {error && (
-            <p className="text-sm text-[var(--color-error)]">{error}</p>
+            <div className="flex items-start gap-2 text-sm text-[var(--color-error)] bg-red-50 rounded-[var(--radius-control)] p-3">
+              <AlertCircle size={16} className="mt-0.5 shrink-0" />
+              <p>{error}</p>
+            </div>
           )}
 
           <button
