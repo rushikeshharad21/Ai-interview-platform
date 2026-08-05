@@ -84,11 +84,6 @@ const InterviewPreview = () => {
       });
 
       streamRef.current = stream;
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-
       startMicLevelMeter(stream);
       setPermissionStatus("granted");
     } catch (err) {
@@ -106,6 +101,12 @@ const InterviewPreview = () => {
       }
     }
   };
+
+  useEffect(() => {
+    if (permissionStatus === "granted" && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+    }
+  }, [permissionStatus]);
 
   useEffect(() => {
     return () => {
