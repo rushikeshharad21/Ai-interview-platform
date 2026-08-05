@@ -5,6 +5,11 @@ import { Smile, VideoOff } from "lucide-react";
 const MODEL_URL = "/models";
 const DETECTION_INTERVAL_MS = 1000;
 
+const DETECTOR_OPTIONS = new faceapi.TinyFaceDetectorOptions({
+  inputSize: 320,
+  scoreThreshold: 0.3,
+});
+
 const emotionLabels = {
   neutral: "Neutral",
   happy: "Happy",
@@ -53,7 +58,13 @@ const FaceEmotionMonitor = () => {
 
     const startCamera = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: "user",
+            width: { ideal: 640 },
+            height: { ideal: 480 },
+          },
+        });
         streamRef.current = stream;
 
         if (videoRef.current) {
@@ -81,7 +92,7 @@ const FaceEmotionMonitor = () => {
       if (!videoRef.current || videoRef.current.readyState !== 4) return;
 
       const result = await faceapi
-        .detectSingleFace(videoRef.current, new faceapi.TinyFaceDetectorOptions())
+        .detectSingleFace(videoRef.current, DETECTOR_OPTIONS)
         .withFaceExpressions();
 
       if (result) {
