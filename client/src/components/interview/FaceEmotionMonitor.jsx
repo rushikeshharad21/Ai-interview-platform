@@ -28,6 +28,7 @@ const getDominantEmotion = (expressions) => {
 
 const FaceEmotionMonitor = () => {
   const videoRef = useRef(null);
+  const canvasRef = useRef(null);
   const streamRef = useRef(null);
   const intervalRef = useRef(null);
   const detectionInProgressRef = useRef(false);
@@ -94,14 +95,21 @@ const FaceEmotionMonitor = () => {
       if (detectionInProgressRef.current) return;
 
       const video = videoRef.current;
+      const canvas = canvasRef.current;
 
-      if (!video || video.readyState !== 4 || video.videoWidth === 0) return;
+      if (!video || !canvas || video.readyState !== 4 || video.videoWidth === 0) return;
 
       detectionInProgressRef.current = true;
 
       try {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        const context = canvas.getContext("2d");
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
         const result = await faceapi
-          .detectSingleFace(video, DETECTOR_OPTIONS)
+          .detectSingleFace(canvas, DETECTOR_OPTIONS)
           .withFaceExpressions();
 
         if (result) {
@@ -141,6 +149,7 @@ const FaceEmotionMonitor = () => {
         muted
         className="w-16 h-16 rounded-[var(--radius-control)] object-cover bg-black"
       />
+      <canvas ref={canvasRef} style={{ display: "none" }} />
       <div className="flex flex-col gap-0.5">
         <span className="flex items-center gap-1.5 text-xs font-medium text-[var(--color-text-primary)]">
           <Smile size={14} className="text-[var(--color-accent)]" />
