@@ -1,7 +1,9 @@
 import { useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { Lock, Mail, ArrowRight, AlertCircle } from "lucide-react"
+import { GoogleLogin } from "@react-oauth/google"
 import api from "../lib/api"
+import { googleAuth } from "../lib/authApi"
 import useAuthStore from "../store/authStore"
 import Input from "../components/ui/Input"
 import WavyBackground from "../components/ui/WavyBackground"
@@ -32,6 +34,25 @@ export default function Login() {
         setError("Network error. Please check your connection and try again.")
       } else {
         setError(err.response?.data?.message || "Something went wrong. Please try again.")
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setError("")
+    setLoading(true)
+
+    try {
+      const data = await googleAuth({ credential: credentialResponse.credential })
+      login(data.user, data.token)
+      navigate("/dashboard")
+    } catch (err) {
+      if (!err.response) {
+        setError("Network error. Please check your connection and try again.")
+      } else {
+        setError(err.response?.data?.message || "Google sign-in failed. Please try again.")
       }
     } finally {
       setLoading(false)
@@ -102,6 +123,13 @@ export default function Login() {
           <div className="flex-1 h-px bg-[var(--color-border)]" />
           <span className="text-xs text-[var(--color-text-secondary)]">OR</span>
           <div className="flex-1 h-px bg-[var(--color-border)]" />
+        </div>
+
+        <div className="flex justify-center">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => setError("Google sign-in failed. Please try again.")}
+          />
         </div>
 
         <p className="text-sm text-[var(--color-text-secondary)] text-center">
