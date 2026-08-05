@@ -3,7 +3,7 @@ import * as faceapi from "face-api.js";
 import { Smile, VideoOff } from "lucide-react";
 
 const MODEL_URL = "/models";
-const DETECTION_INTERVAL_MS = 1000;
+const DETECTION_INTERVAL_MS = 1500;
 
 const DETECTOR_OPTIONS = new faceapi.TinyFaceDetectorOptions({
   inputSize: 320,
@@ -30,12 +30,14 @@ const FaceEmotionMonitor = () => {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const intervalRef = useRef(null);
+  const detectionInProgressRef = useRef(false);
 
   const [modelsLoading, setModelsLoading] = useState(true);
   const [modelsFailed, setModelsFailed] = useState(false);
   const [cameraFailed, setCameraFailed] = useState(false);
   const [currentEmotion, setCurrentEmotion] = useState(null);
   const [faceDetected, setFaceDetected] = useState(false);
+  const [detectionErrorCount, setDetectionErrorCount] = useState(0);
 
   useEffect(() => {
     const loadModels = async () => {
@@ -89,17 +91,30 @@ const FaceEmotionMonitor = () => {
     if (modelsLoading || modelsFailed || cameraFailed) return;
 
     const runDetection = async () => {
-      if (!videoRef.current || videoRef.current.readyState !== 4) return;
+      if (detectionInProgressRef.current) return;
 
-      const result = await faceapi
-        .detectSingleFace(videoRef.current, DETECTOR_OPTIONS)
-        .withFaceExpressions();
+      const video = videoRef.current;
 
-      if (result) {
-        setFaceDetected(true);
-        setCurrentEmotion(getDominantEmotion(result.expressions));
-      } else {
-        setFaceDetected(false);
+      if (!video || video.readyState !== 4 || video.videoWidth === 0) return;
+
+      detectionInProgressRef.current = true;
+
+      try {
+        const result = await faceapi
+          .detectSingleFace(video, DETECTOR_OPTIONS)
+          .withFaceExpressions();
+
+        if (result) {
+          setFaceDetected(true);
+          setCurrentEmotion(getDominantEmotion(result.expressions));
+        } else {
+          setFaceDetected(false);
+        }
+      } catch (err) {
+        console.error("Face detection error:", err);
+        setDetectionErrorCount((prev) => prev + 1);
+      } finally {
+        detectionInProgressRef.current = false;
       }
     };
 
@@ -134,6 +149,8 @@ const FaceEmotionMonitor = () => {
         <span className="text-xs text-[var(--color-text-secondary)]">
           {modelsLoading
             ? "Please wait"
+            : detectionErrorCount > 3
+            ? "Detection error, retrying..."
             : faceDetected
             ? emotionLabels[currentEmotion] || "Detecting..."
             : "No face detected"}
