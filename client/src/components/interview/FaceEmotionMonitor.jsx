@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import * as faceapi from "face-api.js";
+import * as faceapi from "@vladmandic/face-api";
 import { Smile, VideoOff } from "lucide-react";
 
 const MODEL_URL = "/models";
@@ -42,14 +42,6 @@ const FaceEmotionMonitor = () => {
 
   useEffect(() => {
     const loadModels = async () => {
-      try {
-        await faceapi.tf.setBackend("cpu");
-      } catch (backendErr) {
-        console.warn("Could not force cpu backend, continuing with default:", backendErr);
-      }
-
-      setDebugInfo(`Backend after switch attempt: ${faceapi.tf.getBackend()}`);
-
       try {
         await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
         await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
