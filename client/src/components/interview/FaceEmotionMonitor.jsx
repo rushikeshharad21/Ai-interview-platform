@@ -46,8 +46,9 @@ const FaceEmotionMonitor = () => {
         await faceapi.tf.setBackend("cpu");
       } catch (backendErr) {
         console.warn("Could not force cpu backend, continuing with default:", backendErr);
-        setDebugInfo(`Backend switch failed: ${backendErr.message}. Trying default backend.`);
       }
+
+      setDebugInfo(`Backend after switch attempt: ${faceapi.tf.getBackend()}`);
 
       try {
         await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
@@ -124,21 +125,26 @@ const FaceEmotionMonitor = () => {
         const context = canvas.getContext("2d");
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        const result = await faceapi
-          .detectSingleFace(canvas, DETECTOR_OPTIONS)
-          .withFaceExpressions();
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error("Detection timed out after 8s")), 8000);
+        });
+
+        const result = await Promise.race([
+          faceapi.detectSingleFace(canvas, DETECTOR_OPTIONS).withFaceExpressions(),
+          timeoutPromise,
+        ]);
 
         if (result) {
           setFaceDetected(true);
           setCurrentEmotion(getDominantEmotion(result.expressions));
-          setDebugInfo(`Face found, score: ${result.detection.score.toFixed(3)}`);
+          setDebugInfo(`Face found, score: ${result.detection.score.toFixed(3)}, backend: ${faceapi.tf.getBackend()}`);
         } else {
           setFaceDetected(false);
-          setDebugInfo(`No face above threshold. video: ${video.videoWidth}x${video.videoHeight}`);
+          setDebugInfo(`No face above threshold. video: ${video.videoWidth}x${video.videoHeight}, backend: ${faceapi.tf.getBackend()}`);
         }
       } catch (err) {
         console.error("Face detection error:", err);
-        setDebugInfo(`Detection threw error: ${err.message}`);
+        setDebugInfo(`Detection failed: ${err.message}, backend: ${faceapi.tf.getBackend()}`);
       } finally {
         detectionInProgressRef.current = false;
       }
