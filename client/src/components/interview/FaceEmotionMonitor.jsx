@@ -4,6 +4,7 @@ import { Smile, VideoOff } from "lucide-react";
 
 const MODEL_URL = "/models";
 const DETECTION_INTERVAL_MS = 1500;
+const DETECTION_TIMEOUT_MS = 8000;
 
 const DETECTOR_OPTIONS = new faceapi.TinyFaceDetectorOptions({
   inputSize: 320,
@@ -38,18 +39,15 @@ const FaceEmotionMonitor = () => {
   const [cameraFailed, setCameraFailed] = useState(false);
   const [currentEmotion, setCurrentEmotion] = useState(null);
   const [faceDetected, setFaceDetected] = useState(false);
-  const [debugInfo, setDebugInfo] = useState("Starting...");
 
   useEffect(() => {
     const loadModels = async () => {
       try {
         await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
         await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
-        setDebugInfo(`Models loaded. Backend: ${faceapi.tf.getBackend()}`);
         setModelsLoading(false);
       } catch (err) {
         console.error("Failed to load face-api models:", err);
-        setDebugInfo(`Model load failed: ${err.message}`);
         setModelsFailed(true);
         setModelsLoading(false);
       }
@@ -77,7 +75,6 @@ const FaceEmotionMonitor = () => {
         }
       } catch (err) {
         console.error("Failed to start camera for emotion monitor:", err);
-        setDebugInfo(`Camera failed: ${err.name} - ${err.message}`);
         setCameraFailed(true);
       }
     };
@@ -100,15 +97,9 @@ const FaceEmotionMonitor = () => {
       const video = videoRef.current;
       const canvas = canvasRef.current;
 
-      if (!video || !canvas || video.readyState !== 4 || video.videoWidth === 0) {
-        setDebugInfo(
-          `Waiting for video. readyState=${video?.readyState}, width=${video?.videoWidth}`
-        );
-        return;
-      }
+      if (!video || !canvas || video.readyState !== 4 || video.videoWidth === 0) return;
 
       detectionInProgressRef.current = true;
-      setDebugInfo("Running detection...");
 
       try {
         canvas.width = video.videoWidth;
@@ -118,7 +109,7 @@ const FaceEmotionMonitor = () => {
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
         const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error("Detection timed out after 8s")), 8000);
+          setTimeout(() => reject(new Error("Detection timed out")), DETECTION_TIMEOUT_MS);
         });
 
         const result = await Promise.race([
@@ -129,14 +120,12 @@ const FaceEmotionMonitor = () => {
         if (result) {
           setFaceDetected(true);
           setCurrentEmotion(getDominantEmotion(result.expressions));
-          setDebugInfo(`Face found, score: ${result.detection.score.toFixed(3)}, backend: ${faceapi.tf.getBackend()}`);
         } else {
           setFaceDetected(false);
-          setDebugInfo(`No face above threshold. video: ${video.videoWidth}x${video.videoHeight}, backend: ${faceapi.tf.getBackend()}`);
         }
       } catch (err) {
         console.error("Face detection error:", err);
-        setDebugInfo(`Detection failed: ${err.message}, backend: ${faceapi.tf.getBackend()}`);
+        setFaceDetected(false);
       } finally {
         detectionInProgressRef.current = false;
       }
@@ -149,46 +138,36 @@ const FaceEmotionMonitor = () => {
 
   if (modelsFailed || cameraFailed) {
     return (
-      <div className="flex flex-col gap-1 bg-[var(--color-surface)] rounded-[var(--radius-control)] px-3 py-2">
-        <div className="flex items-center gap-2 text-xs text-[var(--color-text-secondary)]">
-          <VideoOff size={14} />
-          Mood detection unavailable
-        </div>
-        <p className="text-[10px] text-[var(--color-text-secondary)] break-words">
-          DEBUG: {debugInfo}
-        </p>
+      <div className="flex items-center gap-2 text-xs text-[var(--color-text-secondary)] bg-[var(--color-surface)] rounded-[var(--radius-control)] px-3 py-2">
+        <VideoOff size={14} />
+        Mood detection unavailable
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-2 bg-[var(--color-surface)] rounded-[var(--radius-control)] p-2">
-      <div className="flex items-center gap-3">
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          muted
-          className="w-16 h-16 rounded-[var(--radius-control)] object-cover bg-black"
-        />
-        <canvas ref={canvasRef} style={{ display: "none" }} />
-        <div className="flex flex-col gap-0.5">
-          <span className="flex items-center gap-1.5 text-xs font-medium text-[var(--color-text-primary)]">
-            <Smile size={14} className="text-[var(--color-accent)]" />
-            {modelsLoading ? "Loading mood detection..." : "Live Mood"}
-          </span>
-          <span className="text-xs text-[var(--color-text-secondary)]">
-            {modelsLoading
-              ? "Please wait"
-              : faceDetected
-              ? emotionLabels[currentEmotion] || "Detecting..."
-              : "No face detected"}
-          </span>
-        </div>
+    <div className="flex items-center gap-3 bg-[var(--color-surface)] rounded-[var(--radius-control)] p-2">
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        muted
+        className="w-16 h-16 rounded-[var(--radius-control)] object-cover bg-black"
+      />
+      <canvas ref={canvasRef} style={{ display: "none" }} />
+      <div className="flex flex-col gap-0.5">
+        <span className="flex items-center gap-1.5 text-xs font-medium text-[var(--color-text-primary)]">
+          <Smile size={14} className="text-[var(--color-accent)]" />
+          {modelsLoading ? "Loading mood detection..." : "Live Mood"}
+        </span>
+        <span className="text-xs text-[var(--color-text-secondary)]">
+          {modelsLoading
+            ? "Please wait"
+            : faceDetected
+            ? emotionLabels[currentEmotion] || "Detecting..."
+            : "No face detected"}
+        </span>
       </div>
-      <p className="text-[10px] text-[var(--color-text-secondary)] break-words border-t border-[var(--color-border)] pt-1">
-        DEBUG: {debugInfo}
-      </p>
     </div>
   );
 };
