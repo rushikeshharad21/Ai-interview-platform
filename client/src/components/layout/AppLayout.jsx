@@ -13,7 +13,8 @@ const candidateNav = [
 const recruiterNav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/jobs/manage", label: "My Jobs", icon: Briefcase },
-  { to: "/applications", label: "Applications", icon: FileText }
+  { to: "/applications", label: "Applications", icon: FileText },
+  { to: "/interviews/manage", label: "Interviews", icon: Calendar }
 ]
 
 export default function AppLayout({ user, onLogout }) {
