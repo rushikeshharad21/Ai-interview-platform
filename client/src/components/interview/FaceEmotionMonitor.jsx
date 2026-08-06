@@ -45,7 +45,12 @@ const FaceEmotionMonitor = () => {
       try {
         await faceapi.tf.setBackend("cpu");
         await faceapi.tf.ready();
+      } catch (backendErr) {
+        console.warn("Could not force cpu backend, continuing with default:", backendErr);
+        setDebugInfo(`Backend switch failed: ${backendErr.message}. Trying default backend.`);
+      }
 
+      try {
         await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
         await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
         setDebugInfo(`Models loaded. Backend: ${faceapi.tf.getBackend()}`);
@@ -80,6 +85,7 @@ const FaceEmotionMonitor = () => {
         }
       } catch (err) {
         console.error("Failed to start camera for emotion monitor:", err);
+        setDebugInfo(`Camera failed: ${err.name} - ${err.message}`);
         setCameraFailed(true);
       }
     };
@@ -146,9 +152,14 @@ const FaceEmotionMonitor = () => {
 
   if (modelsFailed || cameraFailed) {
     return (
-      <div className="flex items-center gap-2 text-xs text-[var(--color-text-secondary)] bg-[var(--color-surface)] rounded-[var(--radius-control)] px-3 py-2">
-        <VideoOff size={14} />
-        Mood detection unavailable
+      <div className="flex flex-col gap-1 bg-[var(--color-surface)] rounded-[var(--radius-control)] px-3 py-2">
+        <div className="flex items-center gap-2 text-xs text-[var(--color-text-secondary)]">
+          <VideoOff size={14} />
+          Mood detection unavailable
+        </div>
+        <p className="text-[10px] text-[var(--color-text-secondary)] break-words">
+          DEBUG: {debugInfo}
+        </p>
       </div>
     );
   }
