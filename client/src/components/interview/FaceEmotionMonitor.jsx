@@ -5,9 +5,9 @@ import { Smile, VideoOff } from "lucide-react";
 const MODEL_URL = "/models";
 const DETECTION_INTERVAL_MS = 1500;
 
-const DEBUG_DETECTOR_OPTIONS = new faceapi.TinyFaceDetectorOptions({
+const DETECTOR_OPTIONS = new faceapi.TinyFaceDetectorOptions({
   inputSize: 320,
-  scoreThreshold: 0.01,
+  scoreThreshold: 0.3,
 });
 
 const emotionLabels = {
@@ -43,6 +43,9 @@ const FaceEmotionMonitor = () => {
   useEffect(() => {
     const loadModels = async () => {
       try {
+        await faceapi.tf.setBackend("cpu");
+        await faceapi.tf.ready();
+
         await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
         await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
         setDebugInfo(`Models loaded. Backend: ${faceapi.tf.getBackend()}`);
@@ -107,6 +110,7 @@ const FaceEmotionMonitor = () => {
       }
 
       detectionInProgressRef.current = true;
+      setDebugInfo("Running detection...");
 
       try {
         canvas.width = video.videoWidth;
@@ -115,22 +119,17 @@ const FaceEmotionMonitor = () => {
         const context = canvas.getContext("2d");
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        const allResults = await faceapi
-          .detectAllFaces(canvas, DEBUG_DETECTOR_OPTIONS)
+        const result = await faceapi
+          .detectSingleFace(canvas, DETECTOR_OPTIONS)
           .withFaceExpressions();
 
-        if (allResults.length > 0) {
-          const best = allResults.sort((a, b) => b.detection.score - a.detection.score)[0];
-          setDebugInfo(
-            `Faces found: ${allResults.length}, best score: ${best.detection.score.toFixed(3)}, video: ${video.videoWidth}x${video.videoHeight}`
-          );
+        if (result) {
           setFaceDetected(true);
-          setCurrentEmotion(getDominantEmotion(best.expressions));
+          setCurrentEmotion(getDominantEmotion(result.expressions));
+          setDebugInfo(`Face found, score: ${result.detection.score.toFixed(3)}`);
         } else {
-          setDebugInfo(
-            `Faces found: 0, video: ${video.videoWidth}x${video.videoHeight}, canvas: ${canvas.width}x${canvas.height}`
-          );
           setFaceDetected(false);
+          setDebugInfo(`No face above threshold. video: ${video.videoWidth}x${video.videoHeight}`);
         }
       } catch (err) {
         console.error("Face detection error:", err);
