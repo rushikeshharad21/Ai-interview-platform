@@ -5,9 +5,9 @@ import { Smile, VideoOff } from "lucide-react";
 const MODEL_URL = "/models";
 const DETECTION_INTERVAL_MS = 1500;
 
-const DETECTOR_OPTIONS = new faceapi.TinyFaceDetectorOptions({
+const DEBUG_DETECTOR_OPTIONS = new faceapi.TinyFaceDetectorOptions({
   inputSize: 320,
-  scoreThreshold: 0.3,
+  scoreThreshold: 0.01,
 });
 
 const emotionLabels = {
@@ -38,16 +38,18 @@ const FaceEmotionMonitor = () => {
   const [cameraFailed, setCameraFailed] = useState(false);
   const [currentEmotion, setCurrentEmotion] = useState(null);
   const [faceDetected, setFaceDetected] = useState(false);
-  const [detectionErrorCount, setDetectionErrorCount] = useState(0);
+  const [debugInfo, setDebugInfo] = useState("Starting...");
 
   useEffect(() => {
     const loadModels = async () => {
       try {
         await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
         await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
+        setDebugInfo(`Models loaded. Backend: ${faceapi.tf.getBackend()}`);
         setModelsLoading(false);
       } catch (err) {
         console.error("Failed to load face-api models:", err);
+        setDebugInfo(`Model load failed: ${err.message}`);
         setModelsFailed(true);
         setModelsLoading(false);
       }
@@ -97,7 +99,12 @@ const FaceEmotionMonitor = () => {
       const video = videoRef.current;
       const canvas = canvasRef.current;
 
-      if (!video || !canvas || video.readyState !== 4 || video.videoWidth === 0) return;
+      if (!video || !canvas || video.readyState !== 4 || video.videoWidth === 0) {
+        setDebugInfo(
+          `Waiting for video. readyState=${video?.readyState}, width=${video?.videoWidth}`
+        );
+        return;
+      }
 
       detectionInProgressRef.current = true;
 
@@ -108,19 +115,26 @@ const FaceEmotionMonitor = () => {
         const context = canvas.getContext("2d");
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        const result = await faceapi
-          .detectSingleFace(canvas, DETECTOR_OPTIONS)
+        const allResults = await faceapi
+          .detectAllFaces(canvas, DEBUG_DETECTOR_OPTIONS)
           .withFaceExpressions();
 
-        if (result) {
+        if (allResults.length > 0) {
+          const best = allResults.sort((a, b) => b.detection.score - a.detection.score)[0];
+          setDebugInfo(
+            `Faces found: ${allResults.length}, best score: ${best.detection.score.toFixed(3)}, video: ${video.videoWidth}x${video.videoHeight}`
+          );
           setFaceDetected(true);
-          setCurrentEmotion(getDominantEmotion(result.expressions));
+          setCurrentEmotion(getDominantEmotion(best.expressions));
         } else {
+          setDebugInfo(
+            `Faces found: 0, video: ${video.videoWidth}x${video.videoHeight}, canvas: ${canvas.width}x${canvas.height}`
+          );
           setFaceDetected(false);
         }
       } catch (err) {
         console.error("Face detection error:", err);
-        setDetectionErrorCount((prev) => prev + 1);
+        setDebugInfo(`Detection threw error: ${err.message}`);
       } finally {
         detectionInProgressRef.current = false;
       }
@@ -141,30 +155,33 @@ const FaceEmotionMonitor = () => {
   }
 
   return (
-    <div className="flex items-center gap-3 bg-[var(--color-surface)] rounded-[var(--radius-control)] p-2">
-      <video
-        ref={videoRef}
-        autoPlay
-        playsInline
-        muted
-        className="w-16 h-16 rounded-[var(--radius-control)] object-cover bg-black"
-      />
-      <canvas ref={canvasRef} style={{ display: "none" }} />
-      <div className="flex flex-col gap-0.5">
-        <span className="flex items-center gap-1.5 text-xs font-medium text-[var(--color-text-primary)]">
-          <Smile size={14} className="text-[var(--color-accent)]" />
-          {modelsLoading ? "Loading mood detection..." : "Live Mood"}
-        </span>
-        <span className="text-xs text-[var(--color-text-secondary)]">
-          {modelsLoading
-            ? "Please wait"
-            : detectionErrorCount > 3
-            ? "Detection error, retrying..."
-            : faceDetected
-            ? emotionLabels[currentEmotion] || "Detecting..."
-            : "No face detected"}
-        </span>
+    <div className="flex flex-col gap-2 bg-[var(--color-surface)] rounded-[var(--radius-control)] p-2">
+      <div className="flex items-center gap-3">
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          className="w-16 h-16 rounded-[var(--radius-control)] object-cover bg-black"
+        />
+        <canvas ref={canvasRef} style={{ display: "none" }} />
+        <div className="flex flex-col gap-0.5">
+          <span className="flex items-center gap-1.5 text-xs font-medium text-[var(--color-text-primary)]">
+            <Smile size={14} className="text-[var(--color-accent)]" />
+            {modelsLoading ? "Loading mood detection..." : "Live Mood"}
+          </span>
+          <span className="text-xs text-[var(--color-text-secondary)]">
+            {modelsLoading
+              ? "Please wait"
+              : faceDetected
+              ? emotionLabels[currentEmotion] || "Detecting..."
+              : "No face detected"}
+          </span>
+        </div>
       </div>
+      <p className="text-[10px] text-[var(--color-text-secondary)] break-words border-t border-[var(--color-border)] pt-1">
+        DEBUG: {debugInfo}
+      </p>
     </div>
   );
 };
