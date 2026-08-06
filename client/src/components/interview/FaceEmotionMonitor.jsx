@@ -44,7 +44,6 @@ const FaceEmotionMonitor = () => {
     const loadModels = async () => {
       try {
         await faceapi.tf.setBackend("cpu");
-        await faceapi.tf.ready();
       } catch (backendErr) {
         console.warn("Could not force cpu backend, continuing with default:", backendErr);
         setDebugInfo(`Backend switch failed: ${backendErr.message}. Trying default backend.`);
