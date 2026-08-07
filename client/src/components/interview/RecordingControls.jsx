@@ -5,13 +5,16 @@ import Button from "../ui/Button.jsx";
 const COUNTDOWN_SECONDS = 3;
 const SpeechRecognitionApi = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-const WaveformBars = ({ barLevels }) => (
+const WaveformBars = () => (
   <div className="flex items-center justify-center gap-1 h-10">
-    {barLevels.map((level, barIndex) => (
+    {[0, 1, 2, 3, 4, 5, 6, 7].map((barIndex) => (
       <div
         key={barIndex}
-        className="w-1 bg-[var(--color-accent)] rounded-full transition-all duration-75"
-        style={{ height: `${8 + level * 32}px` }}
+        className="w-1 bg-[var(--color-accent)] rounded-full animate-pulse"
+        style={{
+          height: `${20 + (barIndex % 4) * 10}px`,
+          animationDelay: `${barIndex * 100}ms`,
+        }}
       ></div>
     ))}
   </div>
