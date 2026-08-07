@@ -227,9 +227,24 @@ const RecordingControls = ({ onRecordingComplete }) => {
   }
 
   return (
-    <div className="flex items-center justify-center gap-2 py-3 text-[var(--color-success)]">
-      <CheckCircle2 size={20} />
-      <span className="text-sm font-medium">Recording completed ({formatElapsed(elapsedSeconds)})</span>
+    <div className="space-y-3">
+      <div className="flex items-center justify-center gap-2 py-3 text-[var(--color-success)]">
+        <CheckCircle2 size={20} />
+        <span className="text-sm font-medium">Recording completed ({formatElapsed(elapsedSeconds)})</span>
+      </div>
+
+      {transcriptionFailed ? (
+        <div className="flex items-center gap-2 text-xs text-[var(--color-text-secondary)] bg-[var(--color-surface)] rounded-[var(--radius-control)] px-3 py-2">
+          <MicOff size={14} />
+          Live transcript unavailable
+        </div>
+      ) : (
+        <div className="bg-[var(--color-surface)] rounded-[var(--radius-control)] p-3 max-h-24 overflow-y-auto">
+          <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
+            {finalTranscriptRef.current.trim() || "No speech detected"}
+          </p>
+        </div>
+      )}
     </div>
   );
 };
