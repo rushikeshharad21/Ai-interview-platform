@@ -5,16 +5,13 @@ import Button from "../ui/Button.jsx";
 const COUNTDOWN_SECONDS = 3;
 const SpeechRecognitionApi = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-const WaveformBars = () => (
+const WaveformBars = ({ barLevels }) => (
   <div className="flex items-center justify-center gap-1 h-10">
-    {[0, 1, 2, 3, 4, 5, 6, 7].map((barIndex) => (
+    {barLevels.map((level, barIndex) => (
       <div
         key={barIndex}
-        className="w-1 bg-[var(--color-accent)] rounded-full animate-pulse"
-        style={{
-          height: `${20 + (barIndex % 4) * 10}px`,
-          animationDelay: `${barIndex * 100}ms`,
-        }}
+        className="w-1 bg-[var(--color-accent)] rounded-full transition-all duration-75"
+        style={{ height: `${8 + level * 32}px` }}
       ></div>
     ))}
   </div>
@@ -37,6 +34,15 @@ const RecordingControls = ({ onRecordingComplete }) => {
   const recognitionRef = useRef(null);
   const finalTranscriptRef = useRef("");
   const recordingActiveRef = useRef(false);
+
+  const audioContextRef = useRef(null);
+  const audioStreamRef = useRef(null);
+  const animationFrameRef = useRef(null);
+  const volumeSamplesRef = useRef([]);
+  const audioFrameCounterRef = useRef(0);
+
+  const [barLevels, setBarLevels] = useState([0, 0, 0, 0, 0, 0, 0, 0]);
+  const [audioFailed, setAudioFailed] = useState(false);
 
   useEffect(() => {
     if (phase !== "countdown") return;
@@ -72,6 +78,24 @@ const RecordingControls = ({ onRecordingComplete }) => {
       recordingActiveRef.current = false;
       if (recognitionRef.current) {
         recognitionRef.current.stop();
+      }
+    };
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase !== "recording") return;
+
+    startAudioAnalysis();
+
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+      }
+      if (audioStreamRef.current) {
+        audioStreamRef.current.getTracks().forEach((track) => track.stop());
       }
     };
   }, [phase]);
@@ -141,6 +165,54 @@ const RecordingControls = ({ onRecordingComplete }) => {
     return recognition;
   };
 
+  const startAudioAnalysis = async () => {
+    const AudioContextApi = window.AudioContext || window.webkitAudioContext;
+
+    if (!AudioContextApi) {
+      setAudioFailed(true);
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioStreamRef.current = stream;
+
+      const audioContext = new AudioContextApi();
+      audioContextRef.current = audioContext;
+
+      const source = audioContext.createMediaStreamSource(stream);
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 64;
+      source.connect(analyser);
+
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+      const barBinIndices = [1, 3, 5, 7, 9, 11, 13, 15];
+
+      volumeSamplesRef.current = [];
+      audioFrameCounterRef.current = 0;
+
+      const updateBars = () => {
+        analyser.getByteFrequencyData(dataArray);
+
+        const newLevels = barBinIndices.map((binIndex) => dataArray[binIndex] / 255);
+        setBarLevels(newLevels);
+
+        audioFrameCounterRef.current += 1;
+        if (audioFrameCounterRef.current % 6 === 0) {
+          const averageVolume = dataArray.reduce((sum, value) => sum + value, 0) / dataArray.length / 255;
+          volumeSamplesRef.current.push(averageVolume);
+        }
+
+        animationFrameRef.current = requestAnimationFrame(updateBars);
+      };
+
+      updateBars();
+    } catch (err) {
+      console.error("Failed to start audio analysis:", err);
+      setAudioFailed(true);
+    }
+  };
+
   const startTranscription = () => {
     if (!SpeechRecognitionApi) {
       setTranscriptionFailed(true);
@@ -169,6 +241,7 @@ const RecordingControls = ({ onRecordingComplete }) => {
       recognitionRef.current.stop();
     }
 
+    setBarLevels([0, 0, 0, 0, 0, 0, 0, 0]);
     setPhase("stopped");
     onRecordingComplete(elapsedSeconds, finalTranscriptRef.current.trim());
   };
@@ -195,7 +268,7 @@ const RecordingControls = ({ onRecordingComplete }) => {
   if (phase === "recording") {
     return (
       <div className="space-y-3">
-        <WaveformBars />
+        <WaveformBars barLevels={barLevels} />
         <div className="flex items-center justify-between">
           <span className="flex items-center gap-1.5 text-sm text-[var(--color-error)]">
             <span className="w-2 h-2 rounded-full bg-[var(--color-error)] animate-pulse"></span>
