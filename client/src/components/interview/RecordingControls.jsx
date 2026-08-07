@@ -76,12 +76,9 @@ const RecordingControls = ({ onRecordingComplete }) => {
     };
   }, [phase]);
 
-  const startTranscription = () => {
-    if (!SpeechRecognitionApi) {
-      setTranscriptionFailed(true);
-      return;
-    }
+  const lastFinalPieceRef = useRef("");
 
+  const createRecognition = () => {
     const recognition = new SpeechRecognitionApi();
     recognition.continuous = true;
     recognition.interimResults = true;
@@ -91,11 +88,14 @@ const RecordingControls = ({ onRecordingComplete }) => {
       let interimText = "";
 
       for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcriptPiece = event.results[i][0].transcript;
+        const transcriptPiece = event.results[i][0].transcript.trim();
 
         if (event.results[i].isFinal) {
-          finalTranscriptRef.current += `${transcriptPiece} `;
-          setFinalTranscript(finalTranscriptRef.current);
+          if (transcriptPiece && transcriptPiece !== lastFinalPieceRef.current) {
+            finalTranscriptRef.current += `${transcriptPiece} `;
+            setFinalTranscript(finalTranscriptRef.current);
+            lastFinalPieceRef.current = transcriptPiece;
+          }
         } else {
           interimText += transcriptPiece;
         }
@@ -114,17 +114,28 @@ const RecordingControls = ({ onRecordingComplete }) => {
 
     recognition.onend = () => {
       if (recordingActiveRef.current) {
-        recognition.start();
+        recognitionRef.current = createRecognition();
+        recognitionRef.current.start();
       }
     };
 
+    return recognition;
+  };
+
+  const startTranscription = () => {
+    if (!SpeechRecognitionApi) {
+      setTranscriptionFailed(true);
+      return;
+    }
+
     finalTranscriptRef.current = "";
+    lastFinalPieceRef.current = "";
     setFinalTranscript("");
     setInterimTranscript("");
     setTranscriptionFailed(false);
     recordingActiveRef.current = true;
-    recognitionRef.current = recognition;
-    recognition.start();
+    recognitionRef.current = createRecognition();
+    recognitionRef.current.start();
   };
 
   const startRecording = () => {
