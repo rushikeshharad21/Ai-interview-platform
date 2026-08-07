@@ -37,6 +37,10 @@ const answerSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    transcript: {
+      type: String,
+      default: "",
+    },
   },
   { timestamps: true }
 );

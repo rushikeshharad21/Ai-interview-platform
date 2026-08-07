@@ -6,7 +6,7 @@ import Button from "../components/ui/Button.jsx";
 import QuestionTimer from "../components/interview/QuestionTimer.jsx";
 import RecordingControls from "../components/interview/RecordingControls.jsx";
 import FaceEmotionMonitor from "../components/interview/FaceEmotionMonitor.jsx";
-import { getInterviewById } from "../lib/interviewApi.js";
+import { getInterviewById, saveTranscript } from "../lib/interviewApi.js";
 
 const QUESTION_DURATION_SECONDS = 90;
 
@@ -58,8 +58,14 @@ const InterviewSession = () => {
     }
   };
 
-  const handleRecordingComplete = (durationSeconds) => {
+  const handleRecordingComplete = (durationSeconds, transcript) => {
     setHasRecordedCurrent(true);
+
+    if (transcript) {
+      saveTranscript(id, currentIndex, questions[currentIndex], transcript).catch((err) => {
+        console.error("Failed to save transcript:", err);
+      });
+    }
   };
 
   if (loading) {

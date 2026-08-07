@@ -10,6 +10,7 @@ import {
   generateQuestions,
   updateQuestions,
   saveEmotionSample,
+  saveTranscript,
 } from "../controllers/interviewController.js";
 
 const router = express.Router();
@@ -22,5 +23,6 @@ router.patch("/:id/status", protect, requireRole("recruiter"), updateInterviewSt
 router.post("/:id/generate-questions", protect, requireRole("recruiter"), generateQuestions);
 router.patch("/:id/questions", protect, requireRole("recruiter"), updateQuestions);
 router.post("/:id/emotions", protect, saveEmotionSample);
+router.post("/:id/transcript", protect, saveTranscript);
 
 export default router;

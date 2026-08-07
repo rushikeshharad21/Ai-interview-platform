@@ -43,3 +43,12 @@ export const saveEmotionSample = async (interviewId, questionIndex, questionText
   });
   return response.data;
 };
+
+export const saveTranscript = async (interviewId, questionIndex, questionText, transcript) => {
+  const response = await api.post(`/interviews/${interviewId}/transcript`, {
+    questionIndex,
+    questionText,
+    transcript,
+  });
+  return response.data;
+};

@@ -276,3 +276,43 @@ export const saveEmotionSample = async (req, res) => {
     res.status(500).json({ message: "Error occurred while saving emotion data", error: error.message });
   }
 };
+
+export const saveTranscript = async (req, res) => {
+  try {
+    const { questionIndex, questionText, transcript } = req.body;
+
+    if (typeof questionIndex !== "number" || !questionText || typeof transcript !== "string") {
+      return res.status(400).json({ message: "questionIndex, questionText and transcript are required" });
+    }
+
+    const interview = await Interview.findById(req.params.id);
+
+    if (!interview) {
+      return res.status(404).json({ message: "Interview not found" });
+    }
+
+    if (interview.candidate.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Not authorized to submit transcript for this interview" });
+    }
+
+    let answer = await Answer.findOne({ interview: interview._id, questionIndex });
+
+    if (!answer) {
+      answer = new Answer({
+        interview: interview._id,
+        questionIndex,
+        questionText,
+        emotionTrend: [],
+      });
+    }
+
+    answer.transcript = transcript;
+    answer.questionText = questionText;
+
+    await answer.save();
+
+    res.status(200).json(answer);
+  } catch (error) {
+    res.status(500).json({ message: "Error occurred while saving transcript", error: error.message });
+  }
+};
