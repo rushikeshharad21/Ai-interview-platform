@@ -34,3 +34,12 @@ export const updateQuestions = async (interviewId, questions) => {
   const response = await api.patch(`/interviews/${interviewId}/questions`, { questions });
   return response.data;
 };
+
+export const saveEmotionSample = async (interviewId, questionIndex, questionText, emotion) => {
+  const response = await api.post(`/interviews/${interviewId}/emotions`, {
+    questionIndex,
+    questionText,
+    emotion,
+  });
+  return response.data;
+};

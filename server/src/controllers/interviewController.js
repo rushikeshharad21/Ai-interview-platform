@@ -1,6 +1,7 @@
 import Interview from "../models/Interview.js";
 import Application from "../models/Application.js";
 import Job from "../models/Job.js";
+import Answer from "../models/Answer.js";
 import { generateContent } from "../services/geminiService.js";
 
 export const scheduleInterview = async (req, res) => {
@@ -213,5 +214,65 @@ export const updateQuestions = async (req, res) => {
     res.status(200).json({ questions: interview.questions });
   } catch (error) {
     res.status(500).json({ message: "Error updating questions", error: error.message });
+  }
+};
+
+const calculateDominantEmotion = (emotionTrend) => {
+  const counts = {};
+
+  emotionTrend.forEach((sample) => {
+    counts[sample.emotion] = (counts[sample.emotion] || 0) + 1;
+  });
+
+  let dominantEmotion = "";
+  let highestCount = 0;
+
+  Object.entries(counts).forEach(([emotion, count]) => {
+    if (count > highestCount) {
+      dominantEmotion = emotion;
+      highestCount = count;
+    }
+  });
+
+  return dominantEmotion;
+};
+
+export const saveEmotionSample = async (req, res) => {
+  try {
+    const { questionIndex, questionText, emotion } = req.body;
+
+    if (typeof questionIndex !== "number" || !questionText || !emotion) {
+      return res.status(400).json({ message: "questionIndex, questionText and emotion are required" });
+    }
+
+    const interview = await Interview.findById(req.params.id);
+
+    if (!interview) {
+      return res.status(404).json({ message: "Interview not found" });
+    }
+
+    if (interview.candidate.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Not authorized to submit emotion data for this interview" });
+    }
+
+    let answer = await Answer.findOne({ interview: interview._id, questionIndex });
+
+    if (!answer) {
+      answer = new Answer({
+        interview: interview._id,
+        questionIndex,
+        questionText,
+        emotionTrend: [],
+      });
+    }
+
+    answer.emotionTrend.push({ emotion });
+    answer.dominantEmotion = calculateDominantEmotion(answer.emotionTrend);
+
+    await answer.save();
+
+    res.status(200).json(answer);
+  } catch (error) {
+    res.status(500).json({ message: "Error occurred while saving emotion data", error: error.message });
   }
 };

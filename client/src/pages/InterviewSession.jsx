@@ -187,7 +187,11 @@ const InterviewSession = () => {
         </p>
 
         <div className="mb-4">
-          <FaceEmotionMonitor />
+          <FaceEmotionMonitor
+            interviewId={id}
+            questionIndex={currentIndex}
+            questionText={questions[currentIndex]}
+          />
         </div>
 
         <div className="mb-4">

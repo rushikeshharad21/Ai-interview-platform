@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import * as faceapi from "@vladmandic/face-api";
 import { Smile, VideoOff } from "lucide-react";
+import { saveEmotionSample } from "../../lib/interviewApi";
 
 const MODEL_URL = "/models";
 const DETECTION_INTERVAL_MS = 1500;
 const DETECTION_TIMEOUT_MS = 8000;
+const EMOTION_SAVE_INTERVAL_MS = 15000;
 
 const DETECTOR_OPTIONS = new faceapi.TinyFaceDetectorOptions({
   inputSize: 320,
@@ -27,12 +29,15 @@ const getDominantEmotion = (expressions) => {
   return sorted[0][0];
 };
 
-const FaceEmotionMonitor = () => {
+const FaceEmotionMonitor = ({ interviewId, questionIndex, questionText }) => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
   const intervalRef = useRef(null);
   const detectionInProgressRef = useRef(false);
+  const lastSavedAtRef = useRef(0);
+  const currentEmotionRef = useRef(null);
+  const trackedQuestionRef = useRef({ index: questionIndex, text: questionText });
 
   const [modelsLoading, setModelsLoading] = useState(true);
   const [modelsFailed, setModelsFailed] = useState(false);
@@ -88,6 +93,14 @@ const FaceEmotionMonitor = () => {
     };
   }, [modelsLoading, modelsFailed]);
 
+  const persistEmotionSample = (emotion, index, text) => {
+    if (!interviewId || typeof index !== "number" || !text || !emotion) return;
+
+    saveEmotionSample(interviewId, index, text, emotion).catch((err) => {
+      console.error("Failed to save emotion sample:", err);
+    });
+  };
+
   useEffect(() => {
     if (modelsLoading || modelsFailed || cameraFailed) return;
 
@@ -118,8 +131,16 @@ const FaceEmotionMonitor = () => {
         ]);
 
         if (result) {
+          const dominantEmotion = getDominantEmotion(result.expressions);
           setFaceDetected(true);
-          setCurrentEmotion(getDominantEmotion(result.expressions));
+          setCurrentEmotion(dominantEmotion);
+          currentEmotionRef.current = dominantEmotion;
+
+          const now = Date.now();
+          if (now - lastSavedAtRef.current >= EMOTION_SAVE_INTERVAL_MS) {
+            persistEmotionSample(dominantEmotion, questionIndex, questionText);
+            lastSavedAtRef.current = now;
+          }
         } else {
           setFaceDetected(false);
         }
@@ -134,7 +155,29 @@ const FaceEmotionMonitor = () => {
     intervalRef.current = setInterval(runDetection, DETECTION_INTERVAL_MS);
 
     return () => clearInterval(intervalRef.current);
-  }, [modelsLoading, modelsFailed, cameraFailed]);
+  }, [modelsLoading, modelsFailed, cameraFailed, interviewId, questionIndex, questionText]);
+
+  useEffect(() => {
+    const previousQuestion = trackedQuestionRef.current;
+    const questionChanged = previousQuestion.index !== questionIndex;
+
+    if (questionChanged && currentEmotionRef.current) {
+      persistEmotionSample(currentEmotionRef.current, previousQuestion.index, previousQuestion.text);
+      lastSavedAtRef.current = Date.now();
+    }
+
+    trackedQuestionRef.current = { index: questionIndex, text: questionText };
+  }, [questionIndex, questionText]);
+
+  useEffect(() => {
+    return () => {
+      const finalQuestion = trackedQuestionRef.current;
+
+      if (currentEmotionRef.current) {
+        persistEmotionSample(currentEmotionRef.current, finalQuestion.index, finalQuestion.text);
+      }
+    };
+  }, []);
 
   if (modelsFailed || cameraFailed) {
     return (
