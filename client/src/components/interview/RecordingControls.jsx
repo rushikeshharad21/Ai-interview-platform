@@ -76,7 +76,23 @@ const RecordingControls = ({ onRecordingComplete }) => {
     };
   }, [phase]);
 
-  const lastFinalPieceRef = useRef("");
+  const trimOverlap = (existingText, newText) => {
+    const existingWords = existingText.trim().split(/\s+/).filter(Boolean);
+    const newWords = newText.trim().split(/\s+/).filter(Boolean);
+
+    const maxOverlap = Math.min(existingWords.length, newWords.length, 10);
+
+    for (let overlapLength = maxOverlap; overlapLength > 0; overlapLength--) {
+      const existingTail = existingWords.slice(-overlapLength).join(" ").toLowerCase();
+      const newHead = newWords.slice(0, overlapLength).join(" ").toLowerCase();
+
+      if (existingTail === newHead) {
+        return newWords.slice(overlapLength).join(" ");
+      }
+    }
+
+    return newText;
+  };
 
   const createRecognition = () => {
     const recognition = new SpeechRecognitionApi();
@@ -91,10 +107,13 @@ const RecordingControls = ({ onRecordingComplete }) => {
         const transcriptPiece = event.results[i][0].transcript.trim();
 
         if (event.results[i].isFinal) {
-          if (transcriptPiece && transcriptPiece !== lastFinalPieceRef.current) {
-            finalTranscriptRef.current += `${transcriptPiece} `;
-            setFinalTranscript(finalTranscriptRef.current);
-            lastFinalPieceRef.current = transcriptPiece;
+          if (transcriptPiece) {
+            const trimmedPiece = trimOverlap(finalTranscriptRef.current, transcriptPiece);
+
+            if (trimmedPiece) {
+              finalTranscriptRef.current += `${trimmedPiece} `;
+              setFinalTranscript(finalTranscriptRef.current);
+            }
           }
         } else {
           interimText += transcriptPiece;
@@ -129,7 +148,6 @@ const RecordingControls = ({ onRecordingComplete }) => {
     }
 
     finalTranscriptRef.current = "";
-    lastFinalPieceRef.current = "";
     setFinalTranscript("");
     setInterimTranscript("");
     setTranscriptionFailed(false);
