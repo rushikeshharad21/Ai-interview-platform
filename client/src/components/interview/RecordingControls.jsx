@@ -168,28 +168,39 @@ const RecordingControls = ({ onRecordingComplete }) => {
   };
 
   const estimatePitch = (buffer, sampleRate) => {
+    const size = buffer.length;
+
+    let energy = 0;
+    for (let i = 0; i < size; i++) {
+      energy += buffer[i] * buffer[i];
+    }
+    const rootMeanSquare = Math.sqrt(energy / size);
+
+    if (rootMeanSquare < 0.01) return null;
+
     const minSamples = Math.floor(sampleRate / 400);
     const maxSamples = Math.floor(sampleRate / 75);
 
     let bestOffset = -1;
-    let bestCorrelation = 0;
+    let bestNormalizedCorrelation = 0;
 
     for (let offset = minSamples; offset <= maxSamples; offset++) {
       let correlation = 0;
 
-      for (let i = 0; i < buffer.length - offset; i++) {
+      for (let i = 0; i < size - offset; i++) {
         correlation += buffer[i] * buffer[i + offset];
       }
 
-      correlation = correlation / (buffer.length - offset);
+      correlation = correlation / (size - offset);
+      const normalizedCorrelation = correlation / (rootMeanSquare * rootMeanSquare);
 
-      if (correlation > bestCorrelation) {
-        bestCorrelation = correlation;
+      if (normalizedCorrelation > bestNormalizedCorrelation) {
+        bestNormalizedCorrelation = normalizedCorrelation;
         bestOffset = offset;
       }
     }
 
-    if (bestCorrelation > 0.01 && bestOffset > 0) {
+    if (bestNormalizedCorrelation > 0.3 && bestOffset > 0) {
       return sampleRate / bestOffset;
     }
 
