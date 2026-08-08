@@ -6,7 +6,7 @@ import Button from "../components/ui/Button.jsx";
 import QuestionTimer from "../components/interview/QuestionTimer.jsx";
 import RecordingControls from "../components/interview/RecordingControls.jsx";
 import FaceEmotionMonitor from "../components/interview/FaceEmotionMonitor.jsx";
-import { getInterviewById, saveTranscript } from "../lib/interviewApi.js";
+import { getInterviewById, saveTranscript, saveVoiceMetrics } from "../lib/interviewApi.js";
 
 const QUESTION_DURATION_SECONDS = 90;
 
@@ -62,7 +62,16 @@ const InterviewSession = () => {
     setHasRecordedCurrent(true);
 
     if (voiceMetrics) {
-      console.log("Voice metrics for question", currentIndex, voiceMetrics);
+      saveVoiceMetrics(
+        id,
+        currentIndex,
+        questions[currentIndex],
+        voiceMetrics.speakingRatio,
+        voiceMetrics.averagePitch,
+        voiceMetrics.pitchVariation
+      ).catch((err) => {
+        console.error("Failed to save voice metrics:", err);
+      });
     }
 
     if (transcript) {

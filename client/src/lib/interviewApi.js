@@ -52,3 +52,21 @@ export const saveTranscript = async (interviewId, questionIndex, questionText, t
   });
   return response.data;
 };
+
+export const saveVoiceMetrics = async (
+  interviewId,
+  questionIndex,
+  questionText,
+  speakingRatio,
+  averagePitch,
+  pitchVariation
+) => {
+  const response = await api.post(`/interviews/${interviewId}/voice-metrics`, {
+    questionIndex,
+    questionText,
+    speakingRatio,
+    averagePitch,
+    pitchVariation,
+  });
+  return response.data;
+};

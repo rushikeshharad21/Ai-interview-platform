@@ -316,3 +316,45 @@ export const saveTranscript = async (req, res) => {
     res.status(500).json({ message: "Error occurred while saving transcript", error: error.message });
   }
 };
+
+export const saveVoiceMetrics = async (req, res) => {
+  try {
+    const { questionIndex, questionText, speakingRatio, averagePitch, pitchVariation } = req.body;
+
+    if (typeof questionIndex !== "number" || !questionText) {
+      return res.status(400).json({ message: "questionIndex and questionText are required" });
+    }
+
+    const interview = await Interview.findById(req.params.id);
+
+    if (!interview) {
+      return res.status(404).json({ message: "Interview not found" });
+    }
+
+    if (interview.candidate.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Not authorized to submit voice metrics for this interview" });
+    }
+
+    let answer = await Answer.findOne({ interview: interview._id, questionIndex });
+
+    if (!answer) {
+      answer = new Answer({
+        interview: interview._id,
+        questionIndex,
+        questionText,
+        emotionTrend: [],
+      });
+    }
+
+    answer.speakingRatio = typeof speakingRatio === "number" ? speakingRatio : null;
+    answer.averagePitch = typeof averagePitch === "number" ? averagePitch : null;
+    answer.pitchVariation = typeof pitchVariation === "number" ? pitchVariation : null;
+    answer.questionText = questionText;
+
+    await answer.save();
+
+    res.status(200).json(answer);
+  } catch (error) {
+    res.status(500).json({ message: "Error occurred while saving voice metrics", error: error.message });
+  }
+};

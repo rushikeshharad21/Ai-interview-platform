@@ -41,6 +41,18 @@ const answerSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    speakingRatio: {
+      type: Number,
+      default: null,
+    },
+    averagePitch: {
+      type: Number,
+      default: null,
+    },
+    pitchVariation: {
+      type: Number,
+      default: null,
+    },
   },
   { timestamps: true }
 );
