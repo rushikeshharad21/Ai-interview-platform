@@ -58,8 +58,12 @@ const InterviewSession = () => {
     }
   };
 
-  const handleRecordingComplete = (durationSeconds, transcript) => {
+  const handleRecordingComplete = (durationSeconds, transcript, voiceMetrics) => {
     setHasRecordedCurrent(true);
+
+    if (voiceMetrics) {
+      console.log("Voice metrics for question", currentIndex, voiceMetrics);
+    }
 
     if (transcript) {
       saveTranscript(id, currentIndex, questions[currentIndex], transcript).catch((err) => {
