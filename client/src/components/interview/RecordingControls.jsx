@@ -4,6 +4,8 @@ import Button from "../ui/Button.jsx";
 
 const COUNTDOWN_SECONDS = 3;
 const SpeechRecognitionApi = window.SpeechRecognition || window.webkitSpeechRecognition;
+const isMobileDevice = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+console.log("Voice analysis: isMobileDevice =", isMobileDevice);
 
 const WaveformBars = () => (
   <div className="flex items-center justify-center gap-1 h-10">
@@ -37,6 +39,12 @@ const RecordingControls = ({ onRecordingComplete }) => {
   const recognitionRef = useRef(null);
   const finalTranscriptRef = useRef("");
   const recordingActiveRef = useRef(false);
+
+  const audioContextRef = useRef(null);
+  const audioStreamRef = useRef(null);
+  const analysisIntervalRef = useRef(null);
+  const volumeSamplesRef = useRef([]);
+  const pitchSamplesRef = useRef([]);
 
   useEffect(() => {
     if (phase !== "countdown") return;
@@ -72,6 +80,24 @@ const RecordingControls = ({ onRecordingComplete }) => {
       recordingActiveRef.current = false;
       if (recognitionRef.current) {
         recognitionRef.current.stop();
+      }
+    };
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase !== "recording" || isMobileDevice) return;
+
+    startVoiceAnalysis();
+
+    return () => {
+      if (analysisIntervalRef.current) {
+        clearInterval(analysisIntervalRef.current);
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+      }
+      if (audioStreamRef.current) {
+        audioStreamRef.current.getTracks().forEach((track) => track.stop());
       }
     };
   }, [phase]);
@@ -141,6 +167,111 @@ const RecordingControls = ({ onRecordingComplete }) => {
     return recognition;
   };
 
+  const estimatePitch = (buffer, sampleRate) => {
+    const minSamples = Math.floor(sampleRate / 400);
+    const maxSamples = Math.floor(sampleRate / 75);
+
+    let bestOffset = -1;
+    let bestCorrelation = 0;
+
+    for (let offset = minSamples; offset <= maxSamples; offset++) {
+      let correlation = 0;
+
+      for (let i = 0; i < buffer.length - offset; i++) {
+        correlation += buffer[i] * buffer[i + offset];
+      }
+
+      correlation = correlation / (buffer.length - offset);
+
+      if (correlation > bestCorrelation) {
+        bestCorrelation = correlation;
+        bestOffset = offset;
+      }
+    }
+
+    if (bestCorrelation > 0.01 && bestOffset > 0) {
+      return sampleRate / bestOffset;
+    }
+
+    return null;
+  };
+
+  const startVoiceAnalysis = async () => {
+    console.log("Voice analysis: starting");
+
+    try {
+      const AudioContextApi = window.AudioContext || window.webkitAudioContext;
+
+      if (!AudioContextApi) {
+        console.log("Voice analysis: AudioContext not supported");
+        return;
+      }
+
+      console.log("Voice analysis: requesting microphone stream");
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      console.log("Voice analysis: microphone stream acquired");
+      audioStreamRef.current = stream;
+
+      const audioContext = new AudioContextApi();
+      audioContextRef.current = audioContext;
+
+      const source = audioContext.createMediaStreamSource(stream);
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 2048;
+      source.connect(analyser);
+
+      const timeDomainData = new Float32Array(analyser.fftSize);
+      volumeSamplesRef.current = [];
+      pitchSamplesRef.current = [];
+
+      analysisIntervalRef.current = setInterval(() => {
+        analyser.getFloatTimeDomainData(timeDomainData);
+
+        const rms = Math.sqrt(
+          timeDomainData.reduce((sum, value) => sum + value * value, 0) / timeDomainData.length
+        );
+        volumeSamplesRef.current.push(rms);
+
+        if (rms > 0.01) {
+          const pitch = estimatePitch(timeDomainData, audioContext.sampleRate);
+          if (pitch) {
+            pitchSamplesRef.current.push(pitch);
+          }
+        }
+      }, 200);
+
+      console.log("Voice analysis: sampling loop started");
+    } catch (err) {
+      console.error("Voice analysis unavailable:", err);
+    }
+  };
+
+  const computeVoiceMetrics = () => {
+    const volumeSamples = volumeSamplesRef.current;
+    const pitchSamples = pitchSamplesRef.current;
+
+    if (volumeSamples.length === 0) return null;
+
+    const silentFrames = volumeSamples.filter((sample) => sample < 0.01).length;
+    const speakingRatio = 1 - silentFrames / volumeSamples.length;
+
+    let averagePitch = null;
+    let pitchVariation = null;
+
+    if (pitchSamples.length > 0) {
+      averagePitch = pitchSamples.reduce((sum, pitch) => sum + pitch, 0) / pitchSamples.length;
+      const variance =
+        pitchSamples.reduce((sum, pitch) => sum + (pitch - averagePitch) ** 2, 0) / pitchSamples.length;
+      pitchVariation = Math.sqrt(variance);
+    }
+
+    return {
+      speakingRatio: Number(speakingRatio.toFixed(2)),
+      averagePitch: averagePitch ? Math.round(averagePitch) : null,
+      pitchVariation: pitchVariation ? Math.round(pitchVariation) : null,
+    };
+  };
+
   const startTranscription = () => {
     if (!SpeechRecognitionApi) {
       setTranscriptionFailed(true);
@@ -169,8 +300,10 @@ const RecordingControls = ({ onRecordingComplete }) => {
       recognitionRef.current.stop();
     }
 
+    const voiceMetrics = computeVoiceMetrics();
+
     setPhase("stopped");
-    onRecordingComplete(elapsedSeconds, finalTranscriptRef.current.trim());
+    onRecordingComplete(elapsedSeconds, finalTranscriptRef.current.trim(), voiceMetrics);
   };
 
   if (phase === "idle") {
