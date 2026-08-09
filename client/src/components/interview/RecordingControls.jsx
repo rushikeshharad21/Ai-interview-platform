@@ -5,7 +5,6 @@ import Button from "../ui/Button.jsx";
 const COUNTDOWN_SECONDS = 3;
 const SpeechRecognitionApi = window.SpeechRecognition || window.webkitSpeechRecognition;
 const isMobileDevice = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-console.log("Voice analysis: isMobileDevice =", isMobileDevice);
 
 const WaveformBars = () => (
   <div className="flex items-center justify-center gap-1 h-10">
@@ -208,19 +207,12 @@ const RecordingControls = ({ onRecordingComplete }) => {
   };
 
   const startVoiceAnalysis = async () => {
-    console.log("Voice analysis: starting");
-
     try {
       const AudioContextApi = window.AudioContext || window.webkitAudioContext;
 
-      if (!AudioContextApi) {
-        console.log("Voice analysis: AudioContext not supported");
-        return;
-      }
+      if (!AudioContextApi) return;
 
-      console.log("Voice analysis: requesting microphone stream");
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      console.log("Voice analysis: microphone stream acquired");
       audioStreamRef.current = stream;
 
       const audioContext = new AudioContextApi();
@@ -250,8 +242,6 @@ const RecordingControls = ({ onRecordingComplete }) => {
           }
         }
       }, 200);
-
-      console.log("Voice analysis: sampling loop started");
     } catch (err) {
       console.error("Voice analysis unavailable:", err);
     }

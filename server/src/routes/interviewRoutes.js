@@ -12,6 +12,7 @@ import {
   saveEmotionSample,
   saveTranscript,
   saveVoiceMetrics,
+  completeInterview,
 } from "../controllers/interviewController.js";
 
 const router = express.Router();
@@ -26,5 +27,6 @@ router.patch("/:id/questions", protect, requireRole("recruiter"), updateQuestion
 router.post("/:id/emotions", protect, saveEmotionSample);
 router.post("/:id/transcript", protect, saveTranscript);
 router.post("/:id/voice-metrics", protect, saveVoiceMetrics);
+router.post("/:id/complete", protect, completeInterview);
 
 export default router;

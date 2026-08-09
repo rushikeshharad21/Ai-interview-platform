@@ -53,6 +53,30 @@ const answerSchema = new mongoose.Schema(
       type: Number,
       default: null,
     },
+    contentScore: {
+      type: Number,
+      default: null,
+    },
+    contentFeedback: {
+      type: String,
+      default: "",
+    },
+    emotionScore: {
+      type: Number,
+      default: null,
+    },
+    voiceScore: {
+      type: Number,
+      default: null,
+    },
+    compositeScore: {
+      type: Number,
+      default: null,
+    },
+    scoredAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );

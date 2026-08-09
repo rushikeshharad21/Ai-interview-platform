@@ -3,6 +3,12 @@ import Application from "../models/Application.js";
 import Job from "../models/Job.js";
 import Answer from "../models/Answer.js";
 import { generateContent } from "../services/geminiService.js";
+import { generateContent, scoreAnswerContent } from "../services/geminiService.js";
+import {
+  calculateEmotionScore,
+  calculateVoiceScore,
+  calculateCompositeScore,
+} from "../utils/scoring.js";
 
 export const scheduleInterview = async (req, res) => {
   try {
@@ -356,5 +362,69 @@ export const saveVoiceMetrics = async (req, res) => {
     res.status(200).json(answer);
   } catch (error) {
     res.status(500).json({ message: "Error occurred while saving voice metrics", error: error.message });
+  }
+};
+
+export const completeInterview = async (req, res) => {
+  try {
+    const interview = await Interview.findById(req.params.id);
+
+    if (!interview) {
+      return res.status(404).json({ message: "Interview not found" });
+    }
+
+    if (interview.candidate.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Not authorized to complete this interview" });
+    }
+
+    if (interview.status === "completed") {
+      const existingAnswers = await Answer.find({ interview: interview._id }).sort({ questionIndex: 1 });
+      return res.status(200).json({ interview, answers: existingAnswers });
+    }
+
+    const answers = await Answer.find({ interview: interview._id }).sort({ questionIndex: 1 });
+
+    for (const answer of answers) {
+      let contentScore = null;
+      let contentFeedback = "";
+
+      try {
+        const contentResult = await scoreAnswerContent(answer.questionText, answer.transcript);
+        contentScore = contentResult.score;
+        contentFeedback = contentResult.feedback;
+      } catch (scoringError) {
+        console.error(`Failed to score content for answer ${answer._id}:`, scoringError.message);
+      }
+
+      const emotionScore = calculateEmotionScore(answer.emotionTrend);
+      const voiceScore = calculateVoiceScore({
+        speakingRatio: answer.speakingRatio,
+        pitchVariation: answer.pitchVariation,
+      });
+
+      const compositeScore = calculateCompositeScore([
+        { score: contentScore, weight: 0.6 },
+        { score: emotionScore, weight: 0.25 },
+        { score: voiceScore, weight: 0.15 },
+      ]);
+
+      answer.contentScore = contentScore;
+      answer.contentFeedback = contentFeedback;
+      answer.emotionScore = emotionScore;
+      answer.voiceScore = voiceScore;
+      answer.compositeScore = compositeScore;
+      answer.scoredAt = new Date();
+
+      await answer.save();
+    }
+
+    interview.status = "completed";
+    await interview.save();
+
+    const scoredAnswers = await Answer.find({ interview: interview._id }).sort({ questionIndex: 1 });
+
+    res.status(200).json({ interview, answers: scoredAnswers });
+  } catch (error) {
+    res.status(500).json({ message: "Error occurred while completing interview", error: error.message });
   }
 };

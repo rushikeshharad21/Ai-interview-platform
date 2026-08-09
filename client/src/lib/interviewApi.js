@@ -70,3 +70,8 @@ export const saveVoiceMetrics = async (
   });
   return response.data;
 };
+
+export const completeInterview = async (interviewId) => {
+  const response = await api.post(`/interviews/${interviewId}/complete`);
+  return response.data;
+};

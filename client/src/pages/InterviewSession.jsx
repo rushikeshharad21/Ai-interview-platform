@@ -1,12 +1,17 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, AlertCircle } from "lucide-react";
+import { ArrowLeft, AlertCircle, Loader2 } from "lucide-react";
 import Card from "../components/ui/Card.jsx";
 import Button from "../components/ui/Button.jsx";
 import QuestionTimer from "../components/interview/QuestionTimer.jsx";
 import RecordingControls from "../components/interview/RecordingControls.jsx";
 import FaceEmotionMonitor from "../components/interview/FaceEmotionMonitor.jsx";
-import { getInterviewById, saveTranscript, saveVoiceMetrics } from "../lib/interviewApi.js";
+import {
+  getInterviewById,
+  saveTranscript,
+  saveVoiceMetrics,
+  completeInterview,
+} from "../lib/interviewApi.js";
 
 const QUESTION_DURATION_SECONDS = 90;
 
@@ -18,8 +23,9 @@ const InterviewSession = () => {
   const [fetchError, setFetchError] = useState("");
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isFinished, setIsFinished] = useState(false);
+  const [sessionStage, setSessionStage] = useState("answering");
   const [hasRecordedCurrent, setHasRecordedCurrent] = useState(false);
+  const [completionError, setCompletionError] = useState("");
 
   const fetchInterview = async () => {
     setLoading(true);
@@ -49,12 +55,25 @@ const InterviewSession = () => {
   const totalQuestions = questions.length;
   const progressPercent = totalQuestions > 0 ? Math.round(((currentIndex + 1) / totalQuestions) * 100) : 0;
 
+  const finishInterview = async () => {
+    setSessionStage("completing");
+    setCompletionError("");
+
+    try {
+      await completeInterview(id);
+      setSessionStage("finished");
+    } catch (err) {
+      setCompletionError("Could not finalize your interview results. Please try again.");
+      setSessionStage("completing");
+    }
+  };
+
   const goToNextQuestion = () => {
     if (currentIndex + 1 < totalQuestions) {
       setCurrentIndex((prev) => prev + 1);
       setHasRecordedCurrent(false);
     } else {
-      setIsFinished(true);
+      finishInterview();
     }
   };
 
@@ -153,7 +172,40 @@ const InterviewSession = () => {
     );
   }
 
-  if (isFinished) {
+  if (sessionStage === "completing") {
+    return (
+      <div className="max-w-2xl mx-auto space-y-4">
+        <Card className="text-center py-10">
+          {completionError ? (
+            <>
+              <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-3">
+                <AlertCircle size={24} className="text-[var(--color-error)]" />
+              </div>
+              <h1 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">
+                Something Went Wrong
+              </h1>
+              <p className="text-sm text-[var(--color-text-secondary)] mb-6 max-w-sm mx-auto">
+                {completionError}
+              </p>
+              <Button onClick={finishInterview}>Try again</Button>
+            </>
+          ) : (
+            <>
+              <Loader2 size={32} className="animate-spin text-[var(--color-accent)] mx-auto mb-4" />
+              <h1 className="text-xl font-semibold text-[var(--color-text-primary)] mb-2">
+                Calculating Your Results
+              </h1>
+              <p className="text-sm text-[var(--color-text-secondary)]">
+                This may take a few seconds, please don't close this page
+              </p>
+            </>
+          )}
+        </Card>
+      </div>
+    );
+  }
+
+  if (sessionStage === "finished") {
     return (
       <div className="max-w-2xl mx-auto space-y-4">
         <Card className="text-center py-10">
