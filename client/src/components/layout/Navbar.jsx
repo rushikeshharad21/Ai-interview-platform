@@ -1,6 +1,6 @@
 import { LogOut, User, Menu } from "lucide-react"
 
-export default function Navbar({ userName, onLogout, onMenuClick }) {
+export default function Navbar({ userName, userAvatar, onLogout, onMenuClick }) {
   return (
     <header className="h-16 shrink-0 rounded-2xl bg-white border border-[var(--color-border)] shadow-[0_1px_3px_rgba(0,0,0,0.06)] flex items-center justify-between px-4 md:px-6">
       <div className="flex items-center gap-3">
@@ -18,15 +18,23 @@ export default function Navbar({ userName, onLogout, onMenuClick }) {
         </span>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         <div className="hidden sm:flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
-          <User size={16} />
+          {userAvatar ? (
+            <img
+              src={userAvatar}
+              alt={userName}
+              referrerPolicy="no-referrer"
+              className="w-6 h-6 rounded-full object-cover"
+            />
+          ) : (
+            <User size={16} />
+          )}
           <span>{userName}</span>
         </div>
-        <div className="hidden sm:block w-px h-5 bg-[var(--color-border)]" />
         <button
           onClick={onLogout}
-          className="flex items-center gap-1.5 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-error)] transition-colors duration-150"
+          className="flex items-center gap-1.5 text-sm text-[var(--color-accent)] border border-[var(--color-accent)] rounded-[var(--radius-control)] px-3 py-1.5 hover:bg-[var(--color-accent)] hover:text-white transition-colors duration-150"
         >
           <LogOut size={16} />
           <span className="hidden sm:inline">Logout</span>

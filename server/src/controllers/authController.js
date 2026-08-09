@@ -43,6 +43,7 @@ export const registerUser = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        avatar: user.avatar,
       },
     });
   } catch (error) {
@@ -83,6 +84,7 @@ export const loginUser = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        avatar: user.avatar,
       },
     });
   } catch (error) {
@@ -118,6 +120,9 @@ export const googleAuth = async (req, res) => {
 
       if (user) {
         user.googleId = payload.sub;
+        if (payload.picture) {
+          user.avatar = payload.picture;
+        }
         await user.save();
       }
     }
@@ -133,6 +138,7 @@ export const googleAuth = async (req, res) => {
         name: payload.name,
         email: payload.email,
         googleId: payload.sub,
+        avatar: payload.picture || "",
         role,
       });
     }
@@ -146,6 +152,7 @@ export const googleAuth = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        avatar: user.avatar,
       },
     });
   } catch (error) {

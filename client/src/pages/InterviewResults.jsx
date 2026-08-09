@@ -13,6 +13,13 @@ const getScoreColor = (score) => {
   return "text-[var(--color-error)]";
 };
 
+const getScoreLabel = (score) => {
+  if (score === null || score === undefined) return "";
+  if (score >= 7) return "Strong performance";
+  if (score >= 4) return "Needs improvement";
+  return "Significant gaps";
+};
+
 const formatScore = (score) => {
   return score === null || score === undefined ? "N/A" : score.toFixed(1);
 };
@@ -141,6 +148,9 @@ const InterviewResults = () => {
                 {Math.round(averageCompositeScore)}
                 <span className="text-base text-[var(--color-text-secondary)] font-normal">/100</span>
               </div>
+              <p className={`text-xs mt-1 ${getScoreColor(averageCompositeScore / 10)}`}>
+                {getScoreLabel(averageCompositeScore / 10)}
+              </p>
             </div>
 
             <ScoreRadarChart contentAvg={contentAvg} emotionAvg={emotionAvg} voiceAvg={voiceAvg} />

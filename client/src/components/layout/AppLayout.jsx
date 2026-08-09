@@ -25,6 +25,7 @@ export default function AppLayout({ user, onLogout }) {
     <div className="h-screen bg-[var(--color-surface)] p-4 flex flex-col gap-4">
       <Navbar
         userName={user?.name}
+        userAvatar={user?.avatar}
         onLogout={onLogout}
         onMenuClick={() => setSidebarOpen(true)}
       />

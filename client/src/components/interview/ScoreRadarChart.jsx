@@ -27,6 +27,25 @@ const CustomTooltip = ({ active, payload }) => {
   );
 };
 
+const ScoreLegendRow = ({ dataPoints }) => {
+  return (
+    <div className="flex items-center justify-center gap-4 flex-wrap pt-1">
+      {dataPoints.map((point) => (
+        <div key={point.subject} className="flex items-center gap-1.5">
+          <span
+            className="w-2 h-2 rounded-full shrink-0"
+            style={{ backgroundColor: ACCENT_COLOR }}
+          ></span>
+          <span className="text-xs text-[var(--color-text-secondary)]">{point.subject}</span>
+          <span className="text-xs font-medium text-[var(--color-text-primary)]">
+            {point.value.toFixed(1)}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 const AverageBars = ({ dataPoints }) => {
   return (
     <div className="space-y-3 py-2">
@@ -65,33 +84,31 @@ const ScoreRadarChart = ({ contentAvg, emotionAvg, voiceAvg }) => {
   }
 
   return (
-    <div className="w-full h-52">
-      <ResponsiveContainer width="100%" height="100%">
-        <RadarChart data={dataPoints} outerRadius="68%">
-          <PolarGrid stroke="var(--color-border)" />
-          <PolarAngleAxis
-            dataKey="subject"
-            tick={{ fill: "#6B7280", fontSize: 12, fontFamily: "Inter" }}
-          />
-          <PolarRadiusAxis
-            angle={90}
-            domain={[0, 10]}
-            tick={false}
-            axisLine={false}
-          />
-          <Radar
-            dataKey="value"
-            stroke={ACCENT_COLOR}
-            fill={ACCENT_COLOR}
-            fillOpacity={0.12}
-            strokeWidth={2}
-            dot={{ r: 3.5, fill: ACCENT_COLOR, stroke: "#FFFFFF", strokeWidth: 2 }}
-            activeDot={{ r: 5, fill: ACCENT_COLOR, stroke: "#FFFFFF", strokeWidth: 2 }}
-            animationDuration={500}
-          />
-          <Tooltip content={<CustomTooltip />} />
-        </RadarChart>
-      </ResponsiveContainer>
+    <div>
+      <div className="w-full h-48">
+        <ResponsiveContainer width="100%" height="100%">
+          <RadarChart data={dataPoints} outerRadius="65%" margin={{ top: 16, right: 16, bottom: 4, left: 16 }}>
+            <PolarGrid stroke="var(--color-border)" />
+            <PolarAngleAxis
+              dataKey="subject"
+              tick={{ fill: "#6B7280", fontSize: 12, fontFamily: "Inter" }}
+            />
+            <PolarRadiusAxis angle={90} domain={[0, 10]} tick={false} axisLine={false} />
+            <Radar
+              dataKey="value"
+              stroke={ACCENT_COLOR}
+              fill={ACCENT_COLOR}
+              fillOpacity={0.12}
+              strokeWidth={2}
+              dot={{ r: 3.5, fill: ACCENT_COLOR, stroke: "#FFFFFF", strokeWidth: 2 }}
+              activeDot={{ r: 5, fill: ACCENT_COLOR, stroke: "#FFFFFF", strokeWidth: 2 }}
+              animationDuration={500}
+            />
+            <Tooltip content={<CustomTooltip />} />
+          </RadarChart>
+        </ResponsiveContainer>
+      </div>
+      <ScoreLegendRow dataPoints={dataPoints} />
     </div>
   );
 };

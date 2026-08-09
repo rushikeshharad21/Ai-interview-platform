@@ -159,12 +159,6 @@ const RecruiterInterviews = () => {
                   {interview.job?.title}
                 </div>
                 <StatusBadge status={interview.status} />
-                <div className="flex items-start justify-between">
-                <div className="flex items-center gap-2 text-[var(--color-text-primary)] font-medium">
-                  <Briefcase size={18} className="text-[var(--color-accent)]" />
-                  {interview.job?.title}
-                </div>
-                <StatusBadge status={interview.status} />
               </div>
 
               {interview.status === "completed" && (
@@ -175,7 +169,6 @@ const RecruiterInterviews = () => {
                   View Results →
                 </Link>
               )}
-              </div>
 
               <div className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
                 <Calendar size={16} />
