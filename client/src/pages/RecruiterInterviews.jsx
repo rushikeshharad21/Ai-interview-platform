@@ -4,6 +4,7 @@ import Card from "../components/ui/Card.jsx";
 import Button from "../components/ui/Button.jsx";
 import StatusBadge from "../components/ui/StatusBadge.jsx";
 import { getMyInterviewsAsRecruiter, generateQuestions, updateQuestions } from "../lib/interviewApi.js";
+import { Link } from "react-router-dom";
 
 const formatScheduledAt = (dateString) => {
   const date = new Date(dateString);
@@ -158,6 +159,22 @@ const RecruiterInterviews = () => {
                   {interview.job?.title}
                 </div>
                 <StatusBadge status={interview.status} />
+                <div className="flex items-start justify-between">
+                <div className="flex items-center gap-2 text-[var(--color-text-primary)] font-medium">
+                  <Briefcase size={18} className="text-[var(--color-accent)]" />
+                  {interview.job?.title}
+                </div>
+                <StatusBadge status={interview.status} />
+              </div>
+
+              {interview.status === "completed" && (
+                <Link
+                  to={`/interviews/${interview._id}/results`}
+                  className="text-sm text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] font-medium"
+                >
+                  View Results →
+                </Link>
+              )}
               </div>
 
               <div className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">

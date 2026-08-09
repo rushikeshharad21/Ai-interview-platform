@@ -427,3 +427,23 @@ export const completeInterview = async (req, res) => {
     res.status(500).json({ message: "Error occurred while completing interview", error: error.message });
   }
 };
+
+export const getInterviewAnswers = async (req, res) => {
+  try {
+    const interview = await Interview.findById(req.params.id);
+
+    if (!interview) {
+      return res.status(404).json({ message: "Interview not found" });
+    }
+
+    if (interview.recruiter.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Not authorized to view results for this interview" });
+    }
+
+    const answers = await Answer.find({ interview: interview._id }).sort({ questionIndex: 1 });
+
+    res.status(200).json({ interview, answers });
+  } catch (error) {
+    res.status(500).json({ message: "Error occurred while fetching interview results", error: error.message });
+  }
+};

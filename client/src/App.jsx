@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react"
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import ProtectedRoute from "./components/auth/ProtectedRoute"
 import Login from "./pages/Login"
@@ -12,6 +13,15 @@ import UpcomingInterviews from "./pages/UpcomingInterviews.jsx";
 import InterviewPreview from "./pages/InterviewPreview.jsx";
 import InterviewSession from "./pages/InterviewSession.jsx";
 import RecruiterInterviews from "./pages/RecruiterInterviews.jsx";
+
+const InterviewResults = lazy(() => import("./pages/InterviewResults.jsx"));
+
+const ResultsPageFallback = () => (
+  <div className="max-w-3xl mx-auto space-y-4">
+    <div className="h-4 w-32 bg-[var(--color-surface)] rounded animate-pulse"></div>
+    <div className="h-40 w-full bg-[var(--color-surface)] rounded-2xl animate-pulse"></div>
+  </div>
+);
 
 function App() {
   const user = useAuthStore((state) => state.user)
@@ -29,6 +39,14 @@ function App() {
           <Route path="/interviews" element={<UpcomingInterviews />} />
           <Route path="/interviews/:id/preview" element={<InterviewPreview />} />
           <Route path="/interviews/:id/session" element={<InterviewSession />} />
+          <Route
+            path="/interviews/:id/results"
+            element={
+              <Suspense fallback={<ResultsPageFallback />}>
+                <InterviewResults />
+              </Suspense>
+            }
+          />
           <Route path="/interviews/manage" element={<RecruiterInterviews />} />
         <Route path="/jobs/manage" element={<ManageJobs />} />
         <Route path="/jobs/:jobId/applications" element={<JobApplications />} />
