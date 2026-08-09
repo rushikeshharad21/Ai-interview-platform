@@ -2,7 +2,6 @@ import Interview from "../models/Interview.js";
 import Application from "../models/Application.js";
 import Job from "../models/Job.js";
 import Answer from "../models/Answer.js";
-import { generateContent } from "../services/geminiService.js";
 import { generateContent, scoreAnswerContent } from "../services/geminiService.js";
 import {
   calculateEmotionScore,
