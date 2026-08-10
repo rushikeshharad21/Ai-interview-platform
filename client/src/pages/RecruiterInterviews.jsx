@@ -60,6 +60,20 @@ const RecruiterInterviews = () => {
     fetchInterviews();
   }, []);
 
+  const filteredInterviews = useMemo(() => {
+    return interviews.filter((interview) => {
+      const matchesStatus = statusFilter === "all" || interview.status === statusFilter;
+
+      const searchLower = searchTerm.trim().toLowerCase();
+      const matchesSearch =
+        searchLower === "" ||
+        interview.job?.title?.toLowerCase().includes(searchLower) ||
+        interview.candidate?.name?.toLowerCase().includes(searchLower);
+
+      return matchesStatus && matchesSearch;
+    });
+  }, [interviews, searchTerm, statusFilter]);
+
   const handleGenerateQuestions = async (interviewId) => {
     setGeneratingId(interviewId);
     setErrorByInterview((prev) => ({ ...prev, [interviewId]: "" }));
@@ -152,20 +166,6 @@ const RecruiterInterviews = () => {
       </Card>
     );
   }
-
-  const filteredInterviews = useMemo(() => {
-    return interviews.filter((interview) => {
-      const matchesStatus = statusFilter === "all" || interview.status === statusFilter;
-
-      const searchLower = searchTerm.trim().toLowerCase();
-      const matchesSearch =
-        searchLower === "" ||
-        interview.job?.title?.toLowerCase().includes(searchLower) ||
-        interview.candidate?.name?.toLowerCase().includes(searchLower);
-
-      return matchesStatus && matchesSearch;
-    });
-  }, [interviews, searchTerm, statusFilter]);
 
   return (
     <div className="space-y-4">

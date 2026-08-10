@@ -76,6 +76,20 @@ const AllApplications = () => {
     fetchApplications();
   }, []);
 
+  const filteredApplications = useMemo(() => {
+    return applications.filter((app) => {
+      const matchesStatus = statusFilter === "all" || app.status === statusFilter;
+
+      const searchLower = searchTerm.trim().toLowerCase();
+      const matchesSearch =
+        searchLower === "" ||
+        app.candidate?.name?.toLowerCase().includes(searchLower) ||
+        app.job?.title?.toLowerCase().includes(searchLower);
+
+      return matchesStatus && matchesSearch;
+    });
+  }, [applications, searchTerm, statusFilter]);
+
   const handleStatusChange = async (applicationId, newStatus) => {
     setUpdatingId(applicationId);
     setStatusError("");
@@ -113,20 +127,6 @@ const AllApplications = () => {
       </Card>
     );
   }
-
-  const filteredApplications = useMemo(() => {
-    return applications.filter((app) => {
-      const matchesStatus = statusFilter === "all" || app.status === statusFilter;
-
-      const searchLower = searchTerm.trim().toLowerCase();
-      const matchesSearch =
-        searchLower === "" ||
-        app.candidate?.name?.toLowerCase().includes(searchLower) ||
-        app.job?.title?.toLowerCase().includes(searchLower);
-
-      return matchesStatus && matchesSearch;
-    });
-  }, [applications, searchTerm, statusFilter]);
 
   return (
     <div className="flex flex-col gap-4">
