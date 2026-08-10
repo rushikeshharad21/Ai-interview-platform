@@ -1,4 +1,5 @@
 import Application from "../models/Application.js"
+import Job from "../models/Job.js"
 
 export const applyToJob = async (req, res) => {
   const { jobId } = req.body
@@ -44,4 +45,47 @@ export const updateApplicationStatus = async (req, res) => {
   await application.save()
 
   res.json(application)
+}
+
+export const getRecruiterSummary = async (req, res) => {
+  try {
+    const jobs = await Job.find({ recruiter: req.user._id })
+    const jobIds = jobs.map((job) => job._id)
+
+    const applications = await Application.find({ job: { $in: jobIds } })
+      .populate("job", "title location")
+      .populate("candidate", "name email")
+      .sort({ createdAt: -1 })
+
+    const openJobsCount = jobs.filter((job) => job.status === "open").length
+    const totalApplications = applications.length
+    const shortlistedCount = applications.filter((application) => application.status === "shortlisted").length
+    const recentApplications = applications.slice(0, 5)
+
+    res.status(200).json({
+      openJobsCount,
+      totalJobsCount: jobs.length,
+      totalApplications,
+      shortlistedCount,
+      recentApplications,
+    })
+  } catch (error) {
+    res.status(500).json({ message: "Error occurred while fetching dashboard summary", error: error.message })
+  }
+}
+
+export const getRecruiterApplications = async (req, res) => {
+  try {
+    const jobs = await Job.find({ recruiter: req.user._id })
+    const jobIds = jobs.map((job) => job._id)
+
+    const applications = await Application.find({ job: { $in: jobIds } })
+      .populate("job", "title location")
+      .populate("candidate", "name email")
+      .sort({ createdAt: -1 })
+
+    res.status(200).json(applications)
+  } catch (error) {
+    res.status(500).json({ message: "Error occurred while fetching applications", error: error.message })
+  }
 }

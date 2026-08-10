@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Calendar, Clock, User, Briefcase, Sparkles, RefreshCw, Pencil, Check, X, AlertCircle } from "lucide-react";
+import { useEffect, useState, useMemo } from "react";
+import { Calendar, Clock, User, Briefcase, Sparkles, RefreshCw, Pencil, Check, X, AlertCircle, Search, SlidersHorizontal } from "lucide-react";
 import Card from "../components/ui/Card.jsx";
 import Button from "../components/ui/Button.jsx";
 import StatusBadge from "../components/ui/StatusBadge.jsx";
@@ -17,6 +17,13 @@ const formatScheduledAt = (dateString) => {
   });
 };
 
+const STATUS_FILTERS = [
+  { value: "all", label: "All" },
+  { value: "scheduled", label: "Scheduled" },
+  { value: "completed", label: "Completed" },
+  { value: "cancelled", label: "Cancelled" },
+];
+
 const RecruiterInterviews = () => {
   const [interviews, setInterviews] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,6 +33,10 @@ const RecruiterInterviews = () => {
   const [editingId, setEditingId] = useState(null);
   const [editedQuestions, setEditedQuestions] = useState([]);
   const [savingEdit, setSavingEdit] = useState(false);
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [filterOpen, setFilterOpen] = useState(false);
 
   const fetchInterviews = async () => {
     setLoading(true);
@@ -142,138 +153,212 @@ const RecruiterInterviews = () => {
     );
   }
 
+  const filteredInterviews = useMemo(() => {
+    return interviews.filter((interview) => {
+      const matchesStatus = statusFilter === "all" || interview.status === statusFilter;
+
+      const searchLower = searchTerm.trim().toLowerCase();
+      const matchesSearch =
+        searchLower === "" ||
+        interview.job?.title?.toLowerCase().includes(searchLower) ||
+        interview.candidate?.name?.toLowerCase().includes(searchLower);
+
+      return matchesStatus && matchesSearch;
+    });
+  }, [interviews, searchTerm, statusFilter]);
+
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold text-[var(--color-text-primary)]">Scheduled Interviews</h1>
+      <div>
+        <h1 className="text-xl font-semibold text-[var(--color-text-primary)]">Scheduled Interviews</h1>
+        <p className="text-sm text-[var(--color-text-secondary)] mt-1">
+          Manage and track all your interviews in one place
+        </p>
+      </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        {interviews.map((interview) => {
-          const isEditing = editingId === interview._id;
-          const isGenerating = generatingId === interview._id;
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)]" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search interviews, candidates..."
+            className="w-full text-sm pl-9 pr-3 py-2.5 border border-[var(--color-border)] rounded-[var(--radius-control)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] bg-white"
+          />
+        </div>
 
-          return (
-            <Card key={interview._id} className="flex flex-col gap-3">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-2 text-[var(--color-text-primary)] font-medium">
-                  <Briefcase size={18} className="text-[var(--color-accent)]" />
-                  {interview.job?.title}
-                </div>
-                <StatusBadge status={interview.status} />
-              </div>
+        <div className="relative">
+          <button
+            onClick={() => setFilterOpen((prev) => !prev)}
+            className="flex items-center gap-2 text-sm text-[var(--color-text-primary)] border border-[var(--color-border)] rounded-[var(--radius-control)] px-4 py-2.5 bg-white hover:bg-[var(--color-surface)] transition-colors duration-150"
+          >
+            <SlidersHorizontal size={16} />
+            {STATUS_FILTERS.find((filter) => filter.value === statusFilter)?.label}
+          </button>
 
-              {interview.status === "completed" && (
-                <Link
-                  to={`/interviews/${interview._id}/results`}
-                  className="text-sm text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] font-medium"
+          {filterOpen && (
+            <div className="absolute right-0 mt-2 w-44 bg-white border border-[var(--color-border)] rounded-[var(--radius-control)] shadow-[0_4px_12px_rgba(0,0,0,0.08)] py-1 z-10">
+              {STATUS_FILTERS.map((filter) => (
+                <button
+                  key={filter.value}
+                  onClick={() => {
+                    setStatusFilter(filter.value);
+                    setFilterOpen(false);
+                  }}
+                  className={`w-full text-left text-sm px-3 py-2 hover:bg-[var(--color-surface)] ${
+                    statusFilter === filter.value
+                      ? "text-[var(--color-accent)] font-medium"
+                      : "text-[var(--color-text-primary)]"
+                  }`}
                 >
-                  View Results →
-                </Link>
-              )}
+                  {filter.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
 
-              <div className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
-                <Calendar size={16} />
-                {formatScheduledAt(interview.scheduledAt)}
-              </div>
+      {filteredInterviews.length === 0 ? (
+        <Card>
+          <p className="text-[var(--color-text-secondary)]">No interviews match your search or filter</p>
+        </Card>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {filteredInterviews.map((interview) => {
+            const isEditing = editingId === interview._id;
+            const isGenerating = generatingId === interview._id;
 
-              <div className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
-                <Clock size={16} />
-                {interview.duration} minutes
-              </div>
+            return (
+              <Card
+                key={interview._id}
+                className="flex flex-col gap-3 border-[var(--color-border)] hover:border-[var(--color-accent)]/40 transition-colors duration-150"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2 text-[var(--color-text-primary)] font-medium">
+                    <div className="w-8 h-8 rounded-lg bg-[var(--color-accent)]/10 flex items-center justify-center shrink-0">
+                      <Calendar size={16} className="text-[var(--color-accent)]" />
+                    </div>
+                    {interview.job?.title}
+                  </div>
+                  <StatusBadge status={interview.status} />
+                </div>
 
-              <div className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
-                <User size={16} />
-                {interview.candidate?.name}
-              </div>
+                {interview.status === "completed" && (
+                  <Link
+                    to={`/interviews/${interview._id}/results`}
+                    className="text-sm text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] font-medium"
+                  >
+                    View Results →
+                  </Link>
+                )}
 
-              {interview.questions && interview.questions.length > 0 ? (
-                <div className="mt-2 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-[var(--color-text-primary)]">
-                      Generated Questions
-                    </p>
-                    {!isEditing && (
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={() => startEditing(interview)}
-                          className="flex items-center gap-1 text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-accent)]"
-                        >
-                          <Pencil size={14} />
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleGenerateQuestions(interview._id)}
-                          disabled={isGenerating}
-                          className="flex items-center gap-1 text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-accent)]"
-                        >
-                          <RefreshCw size={14} className={isGenerating ? "animate-spin" : ""} />
-                          {isGenerating ? "Regenerating..." : "Regenerate"}
-                        </button>
+                <div className="flex items-center gap-3 flex-wrap text-xs text-[var(--color-text-secondary)]">
+                  <span className="flex items-center gap-1.5 bg-[var(--color-surface)] rounded-full px-2.5 py-1">
+                    <Calendar size={12} />
+                    {formatScheduledAt(interview.scheduledAt)}
+                  </span>
+                  <span className="flex items-center gap-1.5 bg-[var(--color-surface)] rounded-full px-2.5 py-1">
+                    <Clock size={12} />
+                    {interview.duration} minutes
+                  </span>
+                  <span className="flex items-center gap-1.5 bg-[var(--color-surface)] rounded-full px-2.5 py-1">
+                    <User size={12} />
+                    {interview.candidate?.name}
+                  </span>
+                </div>
+
+                {interview.questions && interview.questions.length > 0 ? (
+                  <div className="mt-2 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                        Generated Questions
+                      </p>
+                      {!isEditing && (
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => startEditing(interview)}
+                            className="flex items-center gap-1 text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-accent)]"
+                          >
+                            <Pencil size={14} />
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleGenerateQuestions(interview._id)}
+                            disabled={isGenerating}
+                            className="flex items-center gap-1 text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-accent)]"
+                          >
+                            <RefreshCw size={14} className={isGenerating ? "animate-spin" : ""} />
+                            {isGenerating ? "Regenerating..." : "Regenerate"}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {isEditing ? (
+                      <div className="space-y-3">
+                        {editedQuestions.map((question, index) => (
+                          <textarea
+                            key={index}
+                            value={question}
+                            onChange={(e) => handleQuestionTextChange(index, e.target.value)}
+                            rows={2}
+                            disabled={savingEdit}
+                            className="w-full text-sm p-2 border border-[var(--color-border)] rounded-[var(--radius-control)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] disabled:opacity-50"
+                          />
+                        ))}
+                        <div className="flex items-center gap-2">
+                          <Button
+                            onClick={() => saveEditedQuestions(interview._id)}
+                            disabled={savingEdit}
+                            className="flex items-center gap-1"
+                          >
+                            <Check size={14} />
+                            {savingEdit ? "Saving..." : "Save"}
+                          </Button>
+                          <button
+                            onClick={cancelEditing}
+                            disabled={savingEdit}
+                            className="flex items-center gap-1 text-sm text-[var(--color-text-secondary)] px-3 disabled:opacity-50"
+                          >
+                            <X size={14} />
+                            Cancel
+                          </button>
+                        </div>
                       </div>
+                    ) : (
+                      <ol className="list-decimal list-inside space-y-1.5">
+                        {interview.questions.map((question, index) => (
+                          <li key={index} className="text-sm text-[var(--color-text-secondary)]">
+                            {question}
+                          </li>
+                        ))}
+                      </ol>
                     )}
                   </div>
+                ) : (
+                  <Button
+                    onClick={() => handleGenerateQuestions(interview._id)}
+                    disabled={isGenerating}
+                    className="w-full mt-2"
+                  >
+                    <Sparkles size={16} className="mr-2" />
+                    {isGenerating ? "Generating..." : "Generate Questions"}
+                  </Button>
+                )}
 
-                  {isEditing ? (
-                    <div className="space-y-3">
-                      {editedQuestions.map((question, index) => (
-                        <textarea
-                          key={index}
-                          value={question}
-                          onChange={(e) => handleQuestionTextChange(index, e.target.value)}
-                          rows={2}
-                          disabled={savingEdit}
-                          className="w-full text-sm p-2 border border-[var(--color-border)] rounded-[var(--radius-control)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] disabled:opacity-50"
-                        />
-                      ))}
-                      <div className="flex items-center gap-2">
-                        <Button
-                          onClick={() => saveEditedQuestions(interview._id)}
-                          disabled={savingEdit}
-                          className="flex items-center gap-1"
-                        >
-                          <Check size={14} />
-                          {savingEdit ? "Saving..." : "Save"}
-                        </Button>
-                        <button
-                          onClick={cancelEditing}
-                          disabled={savingEdit}
-                          className="flex items-center gap-1 text-sm text-[var(--color-text-secondary)] px-3 disabled:opacity-50"
-                        >
-                          <X size={14} />
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <ol className="list-decimal list-inside space-y-1.5">
-                      {interview.questions.map((question, index) => (
-                        <li key={index} className="text-sm text-[var(--color-text-secondary)]">
-                          {question}
-                        </li>
-                      ))}
-                    </ol>
-                  )}
-                </div>
-              ) : (
-                <Button
-                  onClick={() => handleGenerateQuestions(interview._id)}
-                  disabled={isGenerating}
-                  className="w-full mt-2"
-                >
-                  <Sparkles size={16} className="mr-2" />
-                  {isGenerating ? "Generating..." : "Generate Questions"}
-                </Button>
-              )}
-
-              {errorByInterview[interview._id] && (
-                <div className="flex items-start gap-2 text-sm text-[var(--color-error)] bg-red-50 rounded-[var(--radius-control)] p-3">
-                  <AlertCircle size={16} className="mt-0.5 shrink-0" />
-                  <p>{errorByInterview[interview._id]}</p>
-                </div>
-              )}
-            </Card>
-          );
-        })}
-      </div>
+                {errorByInterview[interview._id] && (
+                  <div className="flex items-start gap-2 text-sm text-[var(--color-error)] bg-red-50 rounded-[var(--radius-control)] p-3">
+                    <AlertCircle size={16} className="mt-0.5 shrink-0" />
+                    <p>{errorByInterview[interview._id]}</p>
+                  </div>
+                )}
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };

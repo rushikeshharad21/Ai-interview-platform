@@ -13,6 +13,9 @@ import UpcomingInterviews from "./pages/UpcomingInterviews.jsx";
 import InterviewPreview from "./pages/InterviewPreview.jsx";
 import InterviewSession from "./pages/InterviewSession.jsx";
 import RecruiterInterviews from "./pages/RecruiterInterviews.jsx";
+import CandidateDashboard from "./pages/Dashboard.jsx";
+import RecruiterDashboard from "./pages/RecruiterDashboard.jsx";
+import AllApplications from "./pages/AllApplications.jsx";
 
 const InterviewResults = lazy(() => import("./pages/InterviewResults.jsx"));
 
@@ -22,6 +25,11 @@ const ResultsPageFallback = () => (
     <div className="h-40 w-full bg-[var(--color-surface)] rounded-2xl animate-pulse"></div>
   </div>
 );
+
+const RoleBasedDashboard = () => {
+  const user = useAuthStore((state) => state.user)
+  return user?.role === "recruiter" ? <RecruiterDashboard /> : <CandidateDashboard />
+}
 
 function App() {
   const user = useAuthStore((state) => state.user)
@@ -33,7 +41,7 @@ function App() {
         <Route path="/register" element={<Register />} />
 
         <Route element={<ProtectedRoute />}>
-          <Route path="/dashboard" element={<div>Dashboard page</div>} />
+          <Route path="/dashboard" element={<RoleBasedDashboard />} />
           <Route path="/jobs" element={<BrowseJobs />} />
           <Route path="/jobs/:id" element={<JobDetail />} />
           <Route path="/interviews" element={<UpcomingInterviews />} />
@@ -51,6 +59,7 @@ function App() {
         <Route path="/jobs/manage" element={<ManageJobs />} />
         <Route path="/jobs/:jobId/applications" element={<JobApplications />} />
           <Route path="/jobs/new" element={<PostJob />} />
+          <Route path="/applications" element={<AllApplications />} />
          
         </Route>
 
