@@ -1,8 +1,9 @@
 import { LogOut, User, Menu } from "lucide-react"
+import ThemeToggle from "../ui/ThemeToggle.jsx"
 
 export default function Navbar({ userName, userAvatar, onLogout, onMenuClick }) {
   return (
-    <header className="h-16 shrink-0 rounded-2xl bg-white border border-[var(--color-border)] shadow-[0_1px_3px_rgba(0,0,0,0.06)] flex items-center justify-between px-4 md:px-6">
+    <header className="h-16 shrink-0 rounded-2xl bg-[var(--color-background)] border border-[var(--color-border)] shadow-[0_1px_3px_rgba(0,0,0,0.06)] flex items-center justify-between px-4 md:px-6">
       <div className="flex items-center gap-3">
         <button
           onClick={onMenuClick}
@@ -32,6 +33,7 @@ export default function Navbar({ userName, userAvatar, onLogout, onMenuClick }) 
           )}
           <span>{userName}</span>
         </div>
+        <ThemeToggle />
         <button
           onClick={onLogout}
           className="flex items-center gap-1.5 text-sm text-[var(--color-accent)] border border-[var(--color-accent)] rounded-[var(--radius-control)] px-3 py-1.5 hover:bg-[var(--color-accent)] hover:text-white transition-colors duration-150"

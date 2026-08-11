@@ -35,7 +35,7 @@ export default function AppLayout({ user, onLogout }) {
           isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
         />
-        <main className="flex-1 min-w-0 rounded-2xl bg-white border border-[var(--color-border)] shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4 md:p-8 overflow-y-auto">
+        <main className="flex-1 min-w-0 rounded-2xl bg-[var(--color-background)] border border-[var(--color-border)] shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4 md:p-8 overflow-y-auto">
           <Outlet />
         </main>
       </div>

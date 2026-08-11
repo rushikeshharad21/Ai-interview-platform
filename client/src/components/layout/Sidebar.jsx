@@ -14,7 +14,7 @@ export default function Sidebar({ items, isOpen, onClose }) {
 
       <aside
         className={cn(
-          "fixed md:static top-4 bottom-4 left-4 md:top-auto md:bottom-auto md:left-auto z-40 w-60 rounded-2xl bg-white border border-[var(--color-border)] shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4 transition-transform duration-200 overflow-y-auto",
+          "fixed md:static top-4 bottom-4 left-4 md:top-auto md:bottom-auto md:left-auto z-40 w-60 rounded-2xl bg-[var(--color-background)] border border-[var(--color-border)] shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4 transition-transform duration-200 overflow-y-auto",
           isOpen ? "translate-x-0" : "-translate-x-[calc(100%+2rem)] md:translate-x-0"
         )}
       >
