@@ -183,14 +183,14 @@ const RecruiterInterviews = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search interviews, candidates..."
-            className="w-full text-sm pl-9 pr-3 py-2.5 border border-[var(--color-border)] rounded-[var(--radius-control)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] bg-white"
+            className="w-full text-sm pl-9 pr-3 py-2.5 border border-[var(--color-border)] rounded-[var(--radius-control)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
           />
         </div>
 
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="w-full sm:w-auto text-sm border border-[var(--color-border)] rounded-[var(--radius-control)] px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+          className="w-full sm:w-auto text-sm border border-[var(--color-border)] rounded-[var(--radius-control)] px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
         >
           {STATUS_FILTERS.map((filter) => (
             <option key={filter.value} value={filter.value}>

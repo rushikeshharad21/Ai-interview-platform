@@ -142,8 +142,7 @@ const AllApplications = () => {
           All candidates who applied across your job postings
         </p>
       </div>
-
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+<div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         <div className="relative flex-1 min-w-0">
           <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)]" />
           <input
@@ -151,14 +150,14 @@ const AllApplications = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search by candidate or job title..."
-            className="w-full text-sm pl-10 pr-4 py-3 border border-[var(--color-border)] rounded-[var(--radius-control)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] bg-white"
+            className="w-full text-sm pl-10 pr-4 py-3 border border-[var(--color-border)] rounded-[var(--radius-control)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] bg-[var(--color-background)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)]"
           />
         </div>
 
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="w-full sm:w-auto text-sm border border-[var(--color-border)] rounded-[var(--radius-control)] px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+          className="w-full sm:w-auto text-sm border border-[var(--color-border)] rounded-[var(--radius-control)] px-4 py-3 bg-[var(--color-background)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
         >
           {STATUS_FILTERS.map((filter) => (
             <option key={filter.value} value={filter.value}>
@@ -185,7 +184,7 @@ const AllApplications = () => {
         </Card>
       ) : (
         <>
-          {/* Desktop table — sm breakpoint and up */}
+          
           <Card className="hidden sm:block p-0 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -287,7 +286,7 @@ const AllApplications = () => {
             </div>
           </Card>
 
-          {/* Mobile cards — below sm breakpoint */}
+          
           <div className="sm:hidden flex flex-col gap-3">
             {filteredApplications.map((app) => {
               const appliedDate = formatRelativeDate(app.createdAt);

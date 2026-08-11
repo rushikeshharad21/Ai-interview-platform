@@ -40,3 +40,18 @@ body {
   background: var(--color-background);
   transition: background-color 0.2s ease, color 0.2s ease;
 }
+
+@layer base {
+  input,
+  select,
+  textarea {
+    background-color: var(--color-background);
+    color: var(--color-text-primary);
+    border-color: var(--color-border);
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-text-secondary);
+  }
+}

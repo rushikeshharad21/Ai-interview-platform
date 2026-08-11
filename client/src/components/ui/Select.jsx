@@ -18,7 +18,7 @@ export default function Select({ label, error, options, icon: Icon, className, .
         )}
         <select
           className={cn(
-            "w-full appearance-none rounded-[var(--radius-control)] border border-[var(--color-border)] px-4 py-2.5 text-sm outline-none transition-all duration-150 focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/20 bg-white",
+            "w-full appearance-none rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text-primary)] px-4 py-2.5 text-sm outline-none transition-all duration-150 focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/20",
             Icon && "pl-9",
             error && "border-[var(--color-error)]",
             className
