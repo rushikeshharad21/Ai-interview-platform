@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { Calendar, Clock, User, Briefcase, Sparkles, RefreshCw, Pencil, Check, X, AlertCircle, Search, SlidersHorizontal } from "lucide-react";
+import { Calendar, Clock, User, Briefcase, Sparkles, RefreshCw, Pencil, Check, X, AlertCircle, Search } from "lucide-react";
 import Card from "../components/ui/Card.jsx";
 import Button from "../components/ui/Button.jsx";
 import StatusBadge from "../components/ui/StatusBadge.jsx";
@@ -36,7 +36,6 @@ const RecruiterInterviews = () => {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [filterOpen, setFilterOpen] = useState(false);
 
   const fetchInterviews = async () => {
     setLoading(true);
@@ -176,8 +175,8 @@ const RecruiterInterviews = () => {
         </p>
       </div>
 
-      <div className="flex items-center gap-3 flex-wrap">
-        <div className="relative flex-1 min-w-[200px]">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <div className="relative flex-1 min-w-0">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)]" />
           <input
             type="text"
@@ -188,36 +187,17 @@ const RecruiterInterviews = () => {
           />
         </div>
 
-        <div className="relative">
-          <button
-            onClick={() => setFilterOpen((prev) => !prev)}
-            className="flex items-center gap-2 text-sm text-[var(--color-text-primary)] border border-[var(--color-border)] rounded-[var(--radius-control)] px-4 py-2.5 bg-white hover:bg-[var(--color-surface)] transition-colors duration-150"
-          >
-            <SlidersHorizontal size={16} />
-            {STATUS_FILTERS.find((filter) => filter.value === statusFilter)?.label}
-          </button>
-
-          {filterOpen && (
-            <div className="absolute right-0 mt-2 w-44 bg-white border border-[var(--color-border)] rounded-[var(--radius-control)] shadow-[0_4px_12px_rgba(0,0,0,0.08)] py-1 z-10">
-              {STATUS_FILTERS.map((filter) => (
-                <button
-                  key={filter.value}
-                  onClick={() => {
-                    setStatusFilter(filter.value);
-                    setFilterOpen(false);
-                  }}
-                  className={`w-full text-left text-sm px-3 py-2 hover:bg-[var(--color-surface)] ${
-                    statusFilter === filter.value
-                      ? "text-[var(--color-accent)] font-medium"
-                      : "text-[var(--color-text-primary)]"
-                  }`}
-                >
-                  {filter.label}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="w-full sm:w-auto text-sm border border-[var(--color-border)] rounded-[var(--radius-control)] px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+        >
+          {STATUS_FILTERS.map((filter) => (
+            <option key={filter.value} value={filter.value}>
+              {filter.label}
+            </option>
+          ))}
+        </select>
       </div>
 
       {filteredInterviews.length === 0 ? (

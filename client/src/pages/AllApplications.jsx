@@ -42,6 +42,12 @@ const getInitials = (name) => {
     .toUpperCase();
 };
 
+const CandidateAvatar = ({ name }) => (
+  <div className="w-10 h-10 rounded-full bg-[var(--color-accent)]/10 flex items-center justify-center shrink-0 text-xs font-semibold text-[var(--color-accent)]">
+    {getInitials(name)}
+  </div>
+);
+
 const AllApplications = () => {
   const navigate = useNavigate();
 
@@ -137,8 +143,8 @@ const AllApplications = () => {
         </p>
       </div>
 
-      <div className="flex items-center gap-3 flex-wrap">
-        <div className="relative flex-1 min-w-[240px]">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <div className="relative flex-1 min-w-0">
           <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)]" />
           <input
             type="text"
@@ -152,7 +158,7 @@ const AllApplications = () => {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="text-sm border border-[var(--color-border)] rounded-[var(--radius-control)] px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+          className="w-full sm:w-auto text-sm border border-[var(--color-border)] rounded-[var(--radius-control)] px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
         >
           {STATUS_FILTERS.map((filter) => (
             <option key={filter.value} value={filter.value}>
@@ -178,108 +184,179 @@ const AllApplications = () => {
           <p className="text-[var(--color-text-secondary)]">No applications match your search or filter</p>
         </Card>
       ) : (
-        <Card className="p-0 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-[var(--color-border)] text-left">
-                  <th className="px-6 py-3.5 font-medium text-[var(--color-text-secondary)] text-xs uppercase tracking-wide">
-                    Candidate
-                  </th>
-                  <th className="px-6 py-3.5 font-medium text-[var(--color-text-secondary)] text-xs uppercase tracking-wide">
-                    Job
-                  </th>
-                  <th className="px-6 py-3.5 font-medium text-[var(--color-text-secondary)] text-xs uppercase tracking-wide">
-                    Applied On
-                  </th>
-                  <th className="px-6 py-3.5 font-medium text-[var(--color-text-secondary)] text-xs uppercase tracking-wide">
-                    Status
-                  </th>
-                  <th className="px-6 py-3.5 font-medium text-[var(--color-text-secondary)] text-xs uppercase tracking-wide">
-                    Update Status
-                  </th>
-                  <th className="px-6 py-3.5 font-medium text-[var(--color-text-secondary)] text-xs uppercase tracking-wide">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredApplications.map((app) => {
-                  const appliedDate = formatRelativeDate(app.createdAt);
+        <>
+          {/* Desktop table — sm breakpoint and up */}
+          <Card className="hidden sm:block p-0 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-[var(--color-border)] text-left">
+                    <th className="px-6 py-3.5 font-medium text-[var(--color-text-secondary)] text-xs uppercase tracking-wide">
+                      Candidate
+                    </th>
+                    <th className="px-6 py-3.5 font-medium text-[var(--color-text-secondary)] text-xs uppercase tracking-wide">
+                      Job
+                    </th>
+                    <th className="px-6 py-3.5 font-medium text-[var(--color-text-secondary)] text-xs uppercase tracking-wide">
+                      Applied On
+                    </th>
+                    <th className="px-6 py-3.5 font-medium text-[var(--color-text-secondary)] text-xs uppercase tracking-wide">
+                      Status
+                    </th>
+                    <th className="px-6 py-3.5 font-medium text-[var(--color-text-secondary)] text-xs uppercase tracking-wide">
+                      Update Status
+                    </th>
+                    <th className="px-6 py-3.5 font-medium text-[var(--color-text-secondary)] text-xs uppercase tracking-wide">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredApplications.map((app) => {
+                    const appliedDate = formatRelativeDate(app.createdAt);
 
-                  return (
-                    <tr key={app._id} className="border-b border-[var(--color-border)] last:border-0 hover:bg-[var(--color-surface)] transition-colors duration-150">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-[var(--color-accent)]/10 flex items-center justify-center shrink-0 text-xs font-semibold text-[var(--color-accent)]">
-                            {getInitials(app.candidate?.name)}
+                    return (
+                      <tr key={app._id} className="border-b border-[var(--color-border)] last:border-0 hover:bg-[var(--color-surface)] transition-colors duration-150">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <CandidateAvatar name={app.candidate?.name} />
+                            <div className="flex flex-col">
+                              <span className="font-medium text-[var(--color-text-primary)]">
+                                {app.candidate?.name}
+                              </span>
+                              <span className="flex items-center gap-1 text-xs text-[var(--color-text-secondary)]">
+                                <Mail size={12} />
+                                {app.candidate?.email}
+                              </span>
+                            </div>
                           </div>
-                          <div className="flex flex-col">
-                            <span className="font-medium text-[var(--color-text-primary)]">
-                              {app.candidate?.name}
-                            </span>
-                            <span className="flex items-center gap-1 text-xs text-[var(--color-text-secondary)]">
-                              <Mail size={12} />
-                              {app.candidate?.email}
-                            </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] flex items-center justify-center shrink-0">
+                              <Briefcase size={14} className="text-[var(--color-text-secondary)]" />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[var(--color-text-primary)] font-medium">
+                                {app.job?.title}
+                              </span>
+                              <span className="text-xs text-[var(--color-text-secondary)]">
+                                {app.job?.location}
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] flex items-center justify-center shrink-0">
-                            <Briefcase size={14} className="text-[var(--color-text-secondary)]" />
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-1.5 text-[var(--color-text-secondary)]">
+                            <Calendar size={13} />
+                            <div className="flex flex-col">
+                              <span className="text-[var(--color-text-primary)]">{appliedDate.absolute}</span>
+                              <span className="text-xs">{appliedDate.relative}</span>
+                            </div>
                           </div>
-                          <div className="flex flex-col">
-                            <span className="text-[var(--color-text-primary)] font-medium">
-                              {app.job?.title}
-                            </span>
-                            <span className="text-xs text-[var(--color-text-secondary)]">
-                              {app.job?.location}
-                            </span>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-1.5 text-[var(--color-text-secondary)]">
-                          <Calendar size={13} />
-                          <div className="flex flex-col">
-                            <span className="text-[var(--color-text-primary)]">{appliedDate.absolute}</span>
-                            <span className="text-xs">{appliedDate.relative}</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <StatusBadge status={app.status} />
-                      </td>
-                      <td className="px-6 py-4 w-48">
-                        <Select
-                          options={statusOptions}
-                          value={app.status}
-                          onChange={(e) => handleStatusChange(app._id, e.target.value)}
-                          disabled={updatingId === app._id}
-                        />
-                      </td>
-                      <td className="px-6 py-4 w-32">
-                        <button
-                          onClick={() => navigate(`/jobs/${app.job?._id}/applications`)}
-                          className="flex items-center gap-1 text-sm text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] font-medium"
-                        >
-                          Manage
-                          <ArrowRight size={14} />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <StatusBadge status={app.status} />
+                        </td>
+                        <td className="px-6 py-4 w-48">
+                          <Select
+                            options={statusOptions}
+                            value={app.status}
+                            onChange={(e) => handleStatusChange(app._id, e.target.value)}
+                            disabled={updatingId === app._id}
+                          />
+                        </td>
+                        <td className="px-6 py-4 w-32">
+                          <button
+                            onClick={() => navigate(`/jobs/${app.job?._id}/applications`)}
+                            className="flex items-center gap-1 text-sm text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] font-medium"
+                          >
+                            Manage
+                            <ArrowRight size={14} />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
 
-          <div className="px-6 py-3.5 border-t border-[var(--color-border)] text-xs text-[var(--color-text-secondary)]">
-            Showing {filteredApplications.length} of {applications.length} applications
+            <div className="px-6 py-3.5 border-t border-[var(--color-border)] text-xs text-[var(--color-text-secondary)]">
+              Showing {filteredApplications.length} of {applications.length} applications
+            </div>
+          </Card>
+
+          {/* Mobile cards — below sm breakpoint */}
+          <div className="sm:hidden flex flex-col gap-3">
+            {filteredApplications.map((app) => {
+              const appliedDate = formatRelativeDate(app.createdAt);
+
+              return (
+                <Card key={app._id} className="flex flex-col gap-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <CandidateAvatar name={app.candidate?.name} />
+                      <div className="flex flex-col min-w-0">
+                        <span className="font-medium text-[var(--color-text-primary)] truncate">
+                          {app.candidate?.name}
+                        </span>
+                        <span className="flex items-center gap-1 text-xs text-[var(--color-text-secondary)] truncate">
+                          <Mail size={12} className="shrink-0" />
+                          <span className="truncate">{app.candidate?.email}</span>
+                        </span>
+                      </div>
+                    </div>
+                    <StatusBadge status={app.status} />
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-2 border-t border-[var(--color-border)]">
+                    <div className="w-8 h-8 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] flex items-center justify-center shrink-0">
+                      <Briefcase size={14} className="text-[var(--color-text-secondary)]" />
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-sm text-[var(--color-text-primary)] font-medium truncate">
+                        {app.job?.title}
+                      </span>
+                      <span className="text-xs text-[var(--color-text-secondary)]">
+                        {app.job?.location}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 text-xs text-[var(--color-text-secondary)]">
+                    <Calendar size={13} />
+                    <span>{appliedDate.absolute}</span>
+                    <span>·</span>
+                    <span>{appliedDate.relative}</span>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-1">
+                    <div className="flex-1">
+                      <Select
+                        options={statusOptions}
+                        value={app.status}
+                        onChange={(e) => handleStatusChange(app._id, e.target.value)}
+                        disabled={updatingId === app._id}
+                      />
+                    </div>
+                    <button
+                      onClick={() => navigate(`/jobs/${app.job?._id}/applications`)}
+                      className="flex items-center gap-1 text-sm text-[var(--color-accent)] font-medium shrink-0 border border-[var(--color-accent)]/30 rounded-[var(--radius-control)] px-3 py-2"
+                    >
+                      Manage
+                      <ArrowRight size={14} />
+                    </button>
+                  </div>
+                </Card>
+              );
+            })}
+
+            <p className="text-xs text-[var(--color-text-secondary)] text-center py-1">
+              Showing {filteredApplications.length} of {applications.length} applications
+            </p>
           </div>
-        </Card>
+        </>
       )}
     </div>
   );
