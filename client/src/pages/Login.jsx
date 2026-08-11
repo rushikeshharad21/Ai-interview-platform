@@ -79,7 +79,7 @@ export default function Login() {
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <Input
+         <Input
             label="Email"
             type="email"
             name="email"
@@ -89,6 +89,7 @@ export default function Login() {
             onChange={handleChange}
             disabled={loading}
             required
+            labelClassName="text-[#0A0A0A]"
             className="bg-white text-[#0A0A0A] placeholder:text-[#9CA3AF] border-[#E5E7EB]"
           />
           <Input
@@ -101,6 +102,7 @@ export default function Login() {
             onChange={handleChange}
             disabled={loading}
             required
+            labelClassName="text-[#0A0A0A]"
             className="bg-white text-[#0A0A0A] placeholder:text-[#9CA3AF] border-[#E5E7EB]"
           />
 

@@ -1,14 +1,14 @@
 import { cn } from "../../lib/utils"
 
 const statusStyles = {
-  applied: "bg-blue-50 text-blue-600",
+  applied: "bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300",
   shortlisted: "bg-[var(--color-accent)]/10 text-[var(--color-accent)]",
-  interview_scheduled: "bg-amber-50 text-amber-600",
-  rejected: "bg-red-50 text-[var(--color-error)]",
-  hired: "bg-green-50 text-[var(--color-success)]",
-  scheduled: "bg-amber-50 text-amber-600",
-  completed: "bg-green-50 text-[var(--color-success)]",
-  cancelled: "bg-red-50 text-[var(--color-error)]"
+  interview_scheduled: "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300",
+  rejected: "bg-red-50 text-[var(--color-error)] dark:bg-red-500/15",
+  hired: "bg-green-50 text-[var(--color-success)] dark:bg-green-500/15",
+  scheduled: "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300",
+  completed: "bg-green-50 text-[var(--color-success)] dark:bg-green-500/15",
+  cancelled: "bg-red-50 text-[var(--color-error)] dark:bg-red-500/15"
 }
 
 const statusLabels = {

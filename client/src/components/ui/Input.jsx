@@ -2,7 +2,7 @@ import { useState } from "react"
 import { Eye, EyeOff } from "lucide-react"
 import { cn } from "../../lib/utils"
 
-export default function Input({ label, error, type, icon: Icon, className, ...props }) {
+export default function Input({ label, labelClassName, error, type, icon: Icon, className, ...props }) {
   const [showPassword, setShowPassword] = useState(false)
   const isPassword = type === "password"
   const inputType = isPassword ? (showPassword ? "text" : "password") : type
@@ -10,7 +10,7 @@ export default function Input({ label, error, type, icon: Icon, className, ...pr
   return (
     <div className="flex flex-col gap-1.5">
       {label && (
-        <label className="text-sm font-medium text-[var(--color-text-primary)]">
+        <label className={cn("text-sm font-medium text-[var(--color-text-primary)]", labelClassName)}>
           {label}
         </label>
       )}

@@ -133,6 +133,7 @@ export default function Register() {
             onChange={handleChange}
             disabled={loading}
             required
+            labelClassName="text-[#0A0A0A]"
             className="bg-white text-[#0A0A0A] placeholder:text-[#9CA3AF] border-[#E5E7EB]"
           />
           <Input
@@ -145,6 +146,7 @@ export default function Register() {
             onChange={handleChange}
             disabled={loading}
             required
+            labelClassName="text-[#0A0A0A]"
             className="bg-white text-[#0A0A0A] placeholder:text-[#9CA3AF] border-[#E5E7EB]"
           />
           <Input
@@ -157,6 +159,7 @@ export default function Register() {
             onChange={handleChange}
             disabled={loading}
             required
+            labelClassName="text-[#0A0A0A]"
             className="bg-white text-[#0A0A0A] placeholder:text-[#9CA3AF] border-[#E5E7EB]"
           />
 

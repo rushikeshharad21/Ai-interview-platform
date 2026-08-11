@@ -145,69 +145,77 @@ const CandidateDashboard = () => {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard
-          icon={<Calendar size={20} className="text-white" />}
-          gradientClass="from-[var(--color-accent)] to-[var(--color-accent-hover)]"
-          waveColor="#4F46E5"
-          label="Upcoming Interviews"
-          value={upcomingInterviews.length}
-          subtext={nextInterview ? `Next: ${formatAppliedDate(nextInterview.scheduledAt)}` : null}
-          subtextClass="text-[var(--color-text-secondary)]"
-        />
+        <div className="animate-fade-in-up stagger-1">
+          <StatCard
+            icon={<Calendar size={20} className="text-white" />}
+            gradientClass="from-[var(--color-accent)] to-[var(--color-accent-hover)]"
+            waveColor="#4F46E5"
+            label="Upcoming Interviews"
+            value={upcomingInterviews.length}
+            subtext={nextInterview ? `Next: ${formatAppliedDate(nextInterview.scheduledAt)}` : null}
+            subtextClass="text-[var(--color-text-secondary)]"
+          />
+        </div>
 
-        <StatCard
-          icon={<Briefcase size={20} className="text-white" />}
-          gradientClass="from-blue-500 to-blue-600"
-          waveColor="#3B82F6"
-          label="Total Applications"
-          value={applications.length}
-          subtext={applications.length > 0 ? "Keep applying!" : null}
-          subtextClass="text-blue-600"
-        />
+        <div className="animate-fade-in-up stagger-2">
+          <StatCard
+            icon={<Briefcase size={20} className="text-white" />}
+            gradientClass="from-blue-500 to-blue-600"
+            waveColor="#3B82F6"
+            label="Total Applications"
+            value={applications.length}
+            subtext={applications.length > 0 ? "Keep applying!" : null}
+            subtextClass="text-blue-600"
+          />
+        </div>
 
-        <StatCard
-          icon={<CheckCircle2 size={20} className="text-white" />}
-          gradientClass="from-green-500 to-green-600"
-          waveColor="#22C55E"
-          label="Completed Interviews"
-          value={completedInterviews.length}
-          subtext={completedInterviews.length > 0 ? "Great progress!" : null}
-          subtextClass="text-[var(--color-success)]"
-        />
+        <div className="animate-fade-in-up stagger-3">
+          <StatCard
+            icon={<CheckCircle2 size={20} className="text-white" />}
+            gradientClass="from-green-500 to-green-600"
+            waveColor="#22C55E"
+            label="Completed Interviews"
+            value={completedInterviews.length}
+            subtext={completedInterviews.length > 0 ? "Great progress!" : null}
+            subtextClass="text-[var(--color-success)]"
+          />
+        </div>
       </div>
 
       {nextInterview && (
-        <Card className="relative overflow-hidden bg-gradient-to-r from-[var(--color-accent)]/5 to-transparent border-[var(--color-accent)]/20">
-          <svg
-            className="absolute inset-0 w-full h-full opacity-30 pointer-events-none"
-            preserveAspectRatio="none"
-            viewBox="0 0 600 120"
-          >
-            <path
-              d="M300,0 C350,40 320,80 400,60 C480,40 520,90 600,50 L600,120 L300,120 Z"
-              fill="var(--color-accent)"
-              fillOpacity="0.08"
-            />
-          </svg>
+        <div className="animate-fade-in-up stagger-4">
+          <Card className="relative overflow-hidden bg-gradient-to-r from-[var(--color-accent)]/5 to-transparent border-[var(--color-accent)]/20">
+            <svg
+              className="absolute inset-0 w-full h-full opacity-30 pointer-events-none"
+              preserveAspectRatio="none"
+              viewBox="0 0 600 120"
+            >
+              <path
+                d="M300,0 C350,40 320,80 400,60 C480,40 520,90 600,50 L600,120 L300,120 Z"
+                fill="var(--color-accent)"
+                fillOpacity="0.08"
+              />
+            </svg>
 
-          <div className="relative flex items-center justify-between flex-wrap gap-4">
-            <div>
-              <p className="text-xs font-medium text-[var(--color-accent)] mb-2">Next Interview</p>
-              <p className="text-lg font-semibold text-[var(--color-text-primary)]">
-                {nextInterview.job?.title}
-              </p>
-              <p className="text-sm text-[var(--color-text-secondary)] mt-1">
-                {formatScheduledAt(nextInterview.scheduledAt)}
-              </p>
+            <div className="relative flex items-center justify-between flex-wrap gap-4">
+              <div>
+                <p className="text-xs font-medium text-[var(--color-accent)] mb-2">Next Interview</p>
+                <p className="text-lg font-semibold text-[var(--color-text-primary)]">
+                  {nextInterview.job?.title}
+                </p>
+                <p className="text-sm text-[var(--color-text-secondary)] mt-1">
+                  {formatScheduledAt(nextInterview.scheduledAt)}
+                </p>
+              </div>
+              <Link to={`/interviews/${nextInterview._id}/preview`}>
+                <Button className="flex items-center gap-1.5">
+                  View Details
+                  <ArrowRight size={16} />
+                </Button>
+              </Link>
             </div>
-            <Link to={`/interviews/${nextInterview._id}/preview`}>
-              <Button className="flex items-center gap-1.5">
-                View Details
-                <ArrowRight size={16} />
-              </Button>
-            </Link>
-          </div>
-        </Card>
+          </Card>
+        </div>
       )}
 
       <Card>
@@ -224,10 +232,10 @@ const CandidateDashboard = () => {
           </p>
         ) : (
           <div className="space-y-1">
-            {recentApplications.map((application) => (
+            {recentApplications.map((application, index) => (
               <div
                 key={application._id}
-                className="flex items-center gap-3 py-3 border-b border-[var(--color-border)] last:border-0"
+                className={`animate-fade-in-up stagger-${Math.min(index + 1, 6)} flex items-center gap-3 py-3 border-b border-[var(--color-border)] last:border-0`}
               >
                 <div className="w-9 h-9 rounded-lg bg-[var(--color-accent)]/10 flex items-center justify-center shrink-0 text-sm font-semibold text-[var(--color-accent)]">
                   {application.job?.title?.charAt(0).toUpperCase()}
