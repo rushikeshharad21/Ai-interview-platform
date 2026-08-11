@@ -24,7 +24,7 @@ export default function Input({ label, error, type, icon: Icon, className, ...pr
         <input
           type={inputType}
           className={cn(
-            "w-full rounded-[var(--radius-control)] border border-[var(--color-border)] py-2.5 text-sm outline-none transition-all duration-150 focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/20",
+            "w-full rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)] py-2.5 text-sm outline-none transition-all duration-150 focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/20",
             Icon ? "pl-10 pr-4" : "px-4",
             isPassword && "pr-10",
             error && "border-[var(--color-error)]",
