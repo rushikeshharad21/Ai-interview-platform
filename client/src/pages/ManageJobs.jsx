@@ -87,39 +87,40 @@ export default function ManageJobs() {
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {jobs.map((job) => (
-            <Card
-              key={job._id}
-              onClick={() => navigate(`/jobs/${job._id}/applications`)}
-              className="cursor-pointer flex items-center justify-between gap-4 border-transparent transition-all duration-150 hover:shadow-[0_8px_24px_rgba(79,70,229,0.12)]"
-            >
-              <div className="flex flex-col gap-1.5 min-w-0">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-semibold text-[var(--color-text-primary)]">
-                    {job.title}
-                  </h3>
-                  <Badge variant={job.status === "open" ? "success" : "default"}>
-                    {job.status === "open" ? "Open" : "Closed"}
-                  </Badge>
+          {jobs.map((job, index) => (
+            <div key={job._id} className={`animate-fade-in-up stagger-${Math.min(index + 1, 6)}`}>
+              <Card
+                onClick={() => navigate(`/jobs/${job._id}/applications`)}
+                className="cursor-pointer flex items-center justify-between gap-4 border-transparent transition-all duration-150 hover:shadow-[0_8px_24px_rgba(79,70,229,0.12)]"
+              >
+                <div className="flex flex-col gap-1.5 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-[var(--color-text-primary)]">
+                      {job.title}
+                    </h3>
+                    <Badge variant={job.status === "open" ? "success" : "default"}>
+                      {job.status === "open" ? "Open" : "Closed"}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-4 text-xs text-[var(--color-text-secondary)]">
+                    <span className="flex items-center gap-1">
+                      <MapPin size={13} />
+                      {job.location}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Calendar size={13} />
+                      {new Date(job.createdAt).toLocaleDateString()}
+                    </span>
+                    <Badge>{employmentLabels[job.employmentType]}</Badge>
+                  </div>
                 </div>
-                <div className="flex items-center gap-4 text-xs text-[var(--color-text-secondary)]">
-                  <span className="flex items-center gap-1">
-                    <MapPin size={13} />
-                    {job.location}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Calendar size={13} />
-                    {new Date(job.createdAt).toLocaleDateString()}
-                  </span>
-                  <Badge>{employmentLabels[job.employmentType]}</Badge>
-                </div>
-              </div>
 
-              <div className="flex items-center gap-2 text-sm font-medium text-[var(--color-accent)] shrink-0">
-                <Users size={16} />
-                View applicants
-              </div>
-            </Card>
+                <div className="flex items-center gap-2 text-sm font-medium text-[var(--color-accent)] shrink-0">
+                  <Users size={16} />
+                  View applicants
+                </div>
+              </Card>
+            </div>
           ))}
         </div>
       )}

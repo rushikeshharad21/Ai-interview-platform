@@ -155,9 +155,9 @@ const RecruiterDashboard = () => {
 
       <div className="animate-fade-in-up stagger-4">
         <Card>
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
             <p className="font-medium text-[var(--color-text-primary)]">Recent Applications</p>
-            <Link to="/jobs/manage" className="text-sm text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]">
+            <Link to="/jobs/manage" className="text-sm text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] shrink-0">
               Manage Jobs →
             </Link>
           </div>
@@ -171,26 +171,31 @@ const RecruiterDashboard = () => {
               {summary.recentApplications.map((application, index) => (
                 <div
                   key={application._id}
-                  className={`animate-fade-in-up stagger-${Math.min(index + 1, 6)} flex items-center gap-3 py-3 border-b border-[var(--color-border)] last:border-0`}
+                  className={`animate-fade-in-up stagger-${Math.min(index + 1, 6)} flex items-start gap-3 py-3 border-b border-[var(--color-border)] last:border-0`}
                 >
                   <div className="w-9 h-9 rounded-lg bg-[var(--color-accent)]/10 flex items-center justify-center shrink-0 text-sm font-semibold text-[var(--color-accent)]">
                     {application.candidate?.name?.charAt(0).toUpperCase()}
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[var(--color-text-primary)] truncate">
-                      {application.candidate?.name}
-                    </p>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-medium text-[var(--color-text-primary)] truncate">
+                        {application.candidate?.name}
+                      </p>
+                      <ChevronRight size={16} className="text-[var(--color-text-secondary)] shrink-0" />
+                    </div>
+
                     <div className="flex items-center gap-1 text-xs text-[var(--color-text-secondary)] mt-0.5">
-                      <MapPin size={12} />
-                      <span>{application.job?.title}</span>
-                      <span>·</span>
-                      <span>Applied {formatAppliedDate(application.createdAt)}</span>
+                      <MapPin size={12} className="shrink-0" />
+                      <span className="truncate">{application.job?.title}</span>
+                      <span className="shrink-0">·</span>
+                      <span className="shrink-0">{formatAppliedDate(application.createdAt)}</span>
+                    </div>
+
+                    <div className="mt-1.5">
+                      <StatusBadge status={application.status} />
                     </div>
                   </div>
-
-                  <StatusBadge status={application.status} />
-                  <ChevronRight size={16} className="text-[var(--color-text-secondary)] shrink-0" />
                 </div>
               ))}
             </div>

@@ -142,7 +142,8 @@ const AllApplications = () => {
           All candidates who applied across your job postings
         </p>
       </div>
-<div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         <div className="relative flex-1 min-w-0">
           <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)]" />
           <input
@@ -150,14 +151,14 @@ const AllApplications = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search by candidate or job title..."
-            className="w-full text-sm pl-10 pr-4 py-3 border border-[var(--color-border)] rounded-[var(--radius-control)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] bg-[var(--color-background)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)]"
+            className="w-full text-sm pl-10 pr-4 py-3 border border-[var(--color-border)] rounded-[var(--radius-control)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
           />
         </div>
 
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="w-full sm:w-auto text-sm border border-[var(--color-border)] rounded-[var(--radius-control)] px-4 py-3 bg-[var(--color-background)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+          className="w-full sm:w-auto text-sm border border-[var(--color-border)] rounded-[var(--radius-control)] px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
         >
           {STATUS_FILTERS.map((filter) => (
             <option key={filter.value} value={filter.value}>
@@ -184,8 +185,8 @@ const AllApplications = () => {
         </Card>
       ) : (
         <>
-          
-          <Card className="hidden sm:block p-0 overflow-hidden">
+          {/* Desktop table — sm breakpoint and up */}
+          <Card className="hidden sm:block p-0 overflow-hidden animate-fade-in-up">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -211,11 +212,14 @@ const AllApplications = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredApplications.map((app) => {
+                  {filteredApplications.map((app, index) => {
                     const appliedDate = formatRelativeDate(app.createdAt);
 
                     return (
-                      <tr key={app._id} className="border-b border-[var(--color-border)] last:border-0 hover:bg-[var(--color-surface)] transition-colors duration-150">
+                      <tr
+                        key={app._id}
+                        className={`animate-fade-in-up stagger-${Math.min(index + 1, 6)} border-b border-[var(--color-border)] last:border-0 hover:bg-[var(--color-surface)] transition-colors duration-150`}
+                      >
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             <CandidateAvatar name={app.candidate?.name} />
@@ -286,68 +290,70 @@ const AllApplications = () => {
             </div>
           </Card>
 
-          
+          {/* Mobile cards — below sm breakpoint */}
           <div className="sm:hidden flex flex-col gap-3">
-            {filteredApplications.map((app) => {
+            {filteredApplications.map((app, index) => {
               const appliedDate = formatRelativeDate(app.createdAt);
 
               return (
-                <Card key={app._id} className="flex flex-col gap-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <CandidateAvatar name={app.candidate?.name} />
+                <div key={app._id} className={`animate-fade-in-up stagger-${Math.min(index + 1, 6)}`}>
+                  <Card className="flex flex-col gap-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <CandidateAvatar name={app.candidate?.name} />
+                        <div className="flex flex-col min-w-0">
+                          <span className="font-medium text-[var(--color-text-primary)] truncate">
+                            {app.candidate?.name}
+                          </span>
+                          <span className="flex items-center gap-1 text-xs text-[var(--color-text-secondary)] truncate">
+                            <Mail size={12} className="shrink-0" />
+                            <span className="truncate">{app.candidate?.email}</span>
+                          </span>
+                        </div>
+                      </div>
+                      <StatusBadge status={app.status} />
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-2 border-t border-[var(--color-border)]">
+                      <div className="w-8 h-8 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] flex items-center justify-center shrink-0">
+                        <Briefcase size={14} className="text-[var(--color-text-secondary)]" />
+                      </div>
                       <div className="flex flex-col min-w-0">
-                        <span className="font-medium text-[var(--color-text-primary)] truncate">
-                          {app.candidate?.name}
+                        <span className="text-sm text-[var(--color-text-primary)] font-medium truncate">
+                          {app.job?.title}
                         </span>
-                        <span className="flex items-center gap-1 text-xs text-[var(--color-text-secondary)] truncate">
-                          <Mail size={12} className="shrink-0" />
-                          <span className="truncate">{app.candidate?.email}</span>
+                        <span className="text-xs text-[var(--color-text-secondary)]">
+                          {app.job?.location}
                         </span>
                       </div>
                     </div>
-                    <StatusBadge status={app.status} />
-                  </div>
 
-                  <div className="flex items-center gap-2 pt-2 border-t border-[var(--color-border)]">
-                    <div className="w-8 h-8 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] flex items-center justify-center shrink-0">
-                      <Briefcase size={14} className="text-[var(--color-text-secondary)]" />
+                    <div className="flex items-center gap-1.5 text-xs text-[var(--color-text-secondary)]">
+                      <Calendar size={13} />
+                      <span>{appliedDate.absolute}</span>
+                      <span>·</span>
+                      <span>{appliedDate.relative}</span>
                     </div>
-                    <div className="flex flex-col min-w-0">
-                      <span className="text-sm text-[var(--color-text-primary)] font-medium truncate">
-                        {app.job?.title}
-                      </span>
-                      <span className="text-xs text-[var(--color-text-secondary)]">
-                        {app.job?.location}
-                      </span>
-                    </div>
-                  </div>
 
-                  <div className="flex items-center gap-1.5 text-xs text-[var(--color-text-secondary)]">
-                    <Calendar size={13} />
-                    <span>{appliedDate.absolute}</span>
-                    <span>·</span>
-                    <span>{appliedDate.relative}</span>
-                  </div>
-
-                  <div className="flex items-center gap-2 pt-1">
-                    <div className="flex-1">
-                      <Select
-                        options={statusOptions}
-                        value={app.status}
-                        onChange={(e) => handleStatusChange(app._id, e.target.value)}
-                        disabled={updatingId === app._id}
-                      />
+                    <div className="flex items-center gap-2 pt-1">
+                      <div className="flex-1">
+                        <Select
+                          options={statusOptions}
+                          value={app.status}
+                          onChange={(e) => handleStatusChange(app._id, e.target.value)}
+                          disabled={updatingId === app._id}
+                        />
+                      </div>
+                      <button
+                        onClick={() => navigate(`/jobs/${app.job?._id}/applications`)}
+                        className="flex items-center gap-1 text-sm text-[var(--color-accent)] font-medium shrink-0 border border-[var(--color-accent)]/30 rounded-[var(--radius-control)] px-3 py-2"
+                      >
+                        Manage
+                        <ArrowRight size={14} />
+                      </button>
                     </div>
-                    <button
-                      onClick={() => navigate(`/jobs/${app.job?._id}/applications`)}
-                      className="flex items-center gap-1 text-sm text-[var(--color-accent)] font-medium shrink-0 border border-[var(--color-accent)]/30 rounded-[var(--radius-control)] px-3 py-2"
-                    >
-                      Manage
-                      <ArrowRight size={14} />
-                    </button>
-                  </div>
-                </Card>
+                  </Card>
+                </div>
               );
             })}
 

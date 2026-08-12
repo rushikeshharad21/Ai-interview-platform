@@ -113,8 +113,10 @@ export default function BrowseJobs() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredJobs.map((job) => (
-            <JobCard key={job._id} job={job} />
+          {filteredJobs.map((job, index) => (
+            <div key={job._id} className={`animate-fade-in-up stagger-${Math.min(index + 1, 6)}`}>
+              <JobCard job={job} />
+            </div>
           ))}
         </div>
       )}
