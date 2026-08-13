@@ -126,9 +126,9 @@ const InterviewSession = () => {
         </Link>
 
         <Card>
-          <div className="flex flex-col items-center text-center py-8 gap-3">
+          <div role="alert" className="flex flex-col items-center text-center py-8 gap-3">
             <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center">
-              <AlertCircle size={24} className="text-[var(--color-error)]" />
+              <AlertCircle size={24} className="text-[var(--color-error)]" aria-hidden="true" />
             </div>
             <h1 className="text-lg font-semibold text-[var(--color-text-primary)]">
               Unable to Load Interview
@@ -155,7 +155,7 @@ const InterviewSession = () => {
         <Card>
           <div className="flex flex-col items-center text-center py-8 gap-3">
             <div className="w-12 h-12 rounded-full bg-[var(--color-surface)] flex items-center justify-center">
-              <AlertCircle size={24} className="text-[var(--color-text-secondary)]" />
+              <AlertCircle size={24} className="text-[var(--color-text-secondary)]" aria-hidden="true" />
             </div>
             <h1 className="text-lg font-semibold text-[var(--color-text-primary)]">
               Questions Not Ready Yet
@@ -177,9 +177,9 @@ const InterviewSession = () => {
       <div className="max-w-2xl mx-auto space-y-4">
         <Card className="text-center py-10">
           {completionError ? (
-            <>
+            <div role="alert">
               <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-3">
-                <AlertCircle size={24} className="text-[var(--color-error)]" />
+                <AlertCircle size={24} className="text-[var(--color-error)]" aria-hidden="true" />
               </div>
               <h1 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">
                 Something Went Wrong
@@ -188,17 +188,17 @@ const InterviewSession = () => {
                 {completionError}
               </p>
               <Button onClick={finishInterview}>Try again</Button>
-            </>
+            </div>
           ) : (
-            <>
-              <Loader2 size={32} className="animate-spin text-[var(--color-accent)] mx-auto mb-4" />
+            <div role="status" aria-live="polite">
+              <Loader2 size={32} className="animate-spin text-[var(--color-accent)] mx-auto mb-4" aria-hidden="true" />
               <h1 className="text-xl font-semibold text-[var(--color-text-primary)] mb-2">
                 Calculating Your Results
               </h1>
               <p className="text-sm text-[var(--color-text-secondary)]">
                 This may take a few seconds, please don't close this page
               </p>
-            </>
+            </div>
           )}
         </Card>
       </div>

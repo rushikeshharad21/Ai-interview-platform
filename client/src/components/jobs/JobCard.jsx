@@ -18,12 +18,12 @@ export default function JobCard({ job }) {
   return (
     <Card
       onClick={() => navigate(`/jobs/${job._id}`)}
-      className="cursor-pointer flex flex-col gap-4 border-transparent transition-all duration-150 hover:shadow-[0_8px_24px_rgba(79,70,229,0.12)] hover:-translate-y-0.5"
+      className="cursor-pointer flex flex-col gap-4 transition-all duration-150 hover:border-[var(--color-accent)]/40 hover:shadow-[0_8px_24px_rgba(79,70,229,0.12)] hover:-translate-y-0.5"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-[var(--color-accent)]/10 flex items-center justify-center shrink-0">
-            <Building2 size={18} className="text-[var(--color-accent)]" />
+            <Building2 size={18} className="text-[var(--color-accent)]" aria-hidden="true" />
           </div>
           <div>
             <h3 className="font-semibold text-[var(--color-text-primary)] leading-tight">
@@ -53,11 +53,11 @@ export default function JobCard({ job }) {
       <div className="flex items-center justify-between pt-3 border-t border-[var(--color-border)]">
         <div className="flex items-center gap-4 text-xs text-[var(--color-text-secondary)]">
           <span className="flex items-center gap-1">
-            <MapPin size={14} />
+            <MapPin size={14} aria-hidden="true" />
             {job.location}
           </span>
           <span className="flex items-center gap-1">
-            <Calendar size={14} />
+            <Calendar size={14} aria-hidden="true" />
             {new Date(job.createdAt).toLocaleDateString()}
           </span>
         </div>
@@ -66,9 +66,11 @@ export default function JobCard({ job }) {
             e.stopPropagation()
             setSaved(!saved)
           }}
+          aria-label={saved ? "Remove from saved jobs" : "Save this job"}
+          aria-pressed={saved}
           className="text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] transition-colors duration-150"
         >
-          <Bookmark size={16} fill={saved ? "currentColor" : "none"} className={saved ? "text-[var(--color-accent)]" : ""} />
+          <Bookmark size={16} fill={saved ? "currentColor" : "none"} className={saved ? "text-[var(--color-accent)]" : ""} aria-hidden="true" />
         </button>
       </div>
     </Card>

@@ -2,7 +2,9 @@ import Interview from "../models/Interview.js";
 import Application from "../models/Application.js";
 import Job from "../models/Job.js";
 import Answer from "../models/Answer.js";
+import User from "../models/User.js";
 import { generateContent, scoreAnswerContent } from "../services/geminiService.js";
+import { sendEmail } from "../services/emailService.js";
 import {
   calculateEmotionScore,
   calculateVoiceScore,
@@ -47,6 +49,25 @@ export const scheduleInterview = async (req, res) => {
 
     application.status = "interview_scheduled";
     await application.save();
+
+    const candidateUser = await User.findById(application.candidate);
+
+    if (candidateUser?.email) {
+      sendEmail({
+        to: candidateUser.email,
+        subject: `Interview Scheduled: ${job.title}`,
+        html: `
+          <p>Hi ${candidateUser.name},</p>
+          <p>Your interview for <strong>${job.title}</strong> has been scheduled.</p>
+          <p><strong>Date & Time:</strong> ${new Date(scheduledAt).toLocaleString("en-IN", { dateStyle: "full", timeStyle: "short" })}</p>
+          <p><strong>Duration:</strong> ${duration || 30} minutes</p>
+          ${notes ? `<p><strong>Notes:</strong> ${notes}</p>` : ""}
+          <p>Please log in to the platform before the scheduled time to begin your interview.</p>
+        `,
+      }).catch((err) => {
+        console.error("Failed to send interview-scheduled email:", err.message);
+      });
+    }
 
     res.status(201).json(interview);
   } catch (error) {
@@ -419,6 +440,23 @@ export const completeInterview = async (req, res) => {
 
     interview.status = "completed";
     await interview.save();
+
+    const recruiterUser = await User.findById(interview.recruiter);
+    const candidateUser = await User.findById(interview.candidate);
+
+    if (recruiterUser?.email) {
+      sendEmail({
+        to: recruiterUser.email,
+        subject: `Interview Results Ready: ${candidateUser?.name || "Candidate"}`,
+        html: `
+          <p>Hi ${recruiterUser.name},</p>
+          <p><strong>${candidateUser?.name || "A candidate"}</strong> has completed their interview, and the AI-generated results are ready for review.</p>
+          <p><a href="${process.env.CLIENT_URL}/interviews/${interview._id}/results">View Results →</a></p>
+        `,
+      }).catch((err) => {
+        console.error("Failed to send results-ready email:", err.message);
+      });
+    }
 
     const scoredAnswers = await Answer.find({ interview: interview._id }).sort({ questionIndex: 1 });
 

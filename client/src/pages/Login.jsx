@@ -105,10 +105,9 @@ export default function Login() {
             labelClassName="text-[#0A0A0A]"
             className="bg-white text-[#0A0A0A] placeholder:text-[#9CA3AF] border-[#E5E7EB]"
           />
-
-          {error && (
-            <div className="flex items-start gap-2 text-sm text-[#DC2626] bg-red-50 rounded-[var(--radius-control)] p-3">
-              <AlertCircle size={16} className="mt-0.5 shrink-0" />
+{error && (
+            <div role="alert" className="flex items-start gap-2 text-sm text-[#DC2626] bg-red-50 rounded-[var(--radius-control)] p-3">
+              <AlertCircle size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
               <p>{error}</p>
             </div>
           )}

@@ -91,7 +91,7 @@ export default function ManageJobs() {
             <div key={job._id} className={`animate-fade-in-up stagger-${Math.min(index + 1, 6)}`}>
               <Card
                 onClick={() => navigate(`/jobs/${job._id}/applications`)}
-                className="cursor-pointer flex items-center justify-between gap-4 border-transparent transition-all duration-150 hover:shadow-[0_8px_24px_rgba(79,70,229,0.12)]"
+                className="cursor-pointer flex items-center justify-between gap-4 transition-all duration-150 hover:border-[var(--color-accent)]/40 hover:shadow-[0_8px_24px_rgba(79,70,229,0.12)]"
               >
                 <div className="flex flex-col gap-1.5 min-w-0">
                   <div className="flex items-center gap-2">

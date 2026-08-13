@@ -7,6 +7,7 @@ export default function Navbar({ userName, userAvatar, onLogout, onMenuClick }) 
       <div className="flex items-center gap-3">
         <button
           onClick={onMenuClick}
+          aria-label="Open menu"
           className="md:hidden text-[var(--color-text-secondary)]"
         >
           <Menu size={22} />
@@ -24,21 +25,22 @@ export default function Navbar({ userName, userAvatar, onLogout, onMenuClick }) 
           {userAvatar ? (
             <img
               src={userAvatar}
-              alt={userName}
+              alt={`${userName}'s profile photo`}
               referrerPolicy="no-referrer"
               className="w-6 h-6 rounded-full object-cover"
             />
           ) : (
-            <User size={16} />
+            <User size={16} aria-hidden="true" />
           )}
           <span>{userName}</span>
         </div>
         <ThemeToggle />
         <button
           onClick={onLogout}
+          aria-label="Log out"
           className="flex items-center gap-1.5 text-sm text-[var(--color-accent)] border border-[var(--color-accent)] rounded-[var(--radius-control)] px-3 py-1.5 hover:bg-[var(--color-accent)] hover:text-white transition-colors duration-150"
         >
-          <LogOut size={16} />
+          <LogOut size={16} aria-hidden="true" />
           <span className="hidden sm:inline">Logout</span>
         </button>
       </div>
