@@ -124,9 +124,9 @@ const CandidateDashboard = () => {
   if (fetchError) {
     return (
       <Card>
-        <div className="flex flex-col items-center text-center py-8 gap-3">
+        <div role="alert" className="flex flex-col items-center text-center py-8 gap-3">
           <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center">
-            <AlertCircle size={24} className="text-[var(--color-error)]" />
+            <AlertCircle size={24} className="text-[var(--color-error)]" aria-hidden="true" />
           </div>
           <p className="text-[var(--color-text-secondary)] max-w-sm">{fetchError}</p>
           <Button onClick={fetchDashboardData} className="mt-2">Try again</Button>
@@ -218,48 +218,55 @@ const CandidateDashboard = () => {
         </div>
       )}
 
-      <Card>
-        <div className="flex items-center justify-between mb-4">
-          <p className="font-medium text-[var(--color-text-primary)]">Recent Applications</p>
-          <Link to="/jobs" className="text-sm text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]">
-            Browse Jobs →
-          </Link>
-        </div>
+      <div className="animate-fade-in-up stagger-5">
+        <Card>
+          <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
+            <p className="font-medium text-[var(--color-text-primary)]">Recent Applications</p>
+            <Link to="/jobs" className="text-sm text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] shrink-0">
+              Browse Jobs →
+            </Link>
+          </div>
 
-        {recentApplications.length === 0 ? (
-          <p className="text-sm text-[var(--color-text-secondary)]">
-            You haven't applied to any jobs yet
-          </p>
-        ) : (
-          <div className="space-y-1">
-            {recentApplications.map((application, index) => (
-              <div
-                key={application._id}
-                className={`animate-fade-in-up stagger-${Math.min(index + 1, 6)} flex items-center gap-3 py-3 border-b border-[var(--color-border)] last:border-0`}
-              >
-                <div className="w-9 h-9 rounded-lg bg-[var(--color-accent)]/10 flex items-center justify-center shrink-0 text-sm font-semibold text-[var(--color-accent)]">
-                  {application.job?.title?.charAt(0).toUpperCase()}
-                </div>
+          {recentApplications.length === 0 ? (
+            <p className="text-sm text-[var(--color-text-secondary)]">
+              You haven't applied to any jobs yet
+            </p>
+          ) : (
+            <div className="space-y-1">
+              {recentApplications.map((application) => (
+                <div
+                  key={application._id}
+                  className="flex items-start gap-3 py-3 border-b border-[var(--color-border)] last:border-0"
+                >
+                  <div className="w-9 h-9 rounded-lg bg-[var(--color-accent)]/10 flex items-center justify-center shrink-0 text-sm font-semibold text-[var(--color-accent)]">
+                    {application.job?.title?.charAt(0).toUpperCase()}
+                  </div>
 
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-[var(--color-text-primary)] truncate">
-                    {application.job?.title}
-                  </p>
-                  <div className="flex items-center gap-1 text-xs text-[var(--color-text-secondary)] mt-0.5">
-                    <MapPin size={12} />
-                    <span>{application.job?.location}</span>
-                    <span>·</span>
-                    <span>Applied {formatAppliedDate(application.createdAt)}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-medium text-[var(--color-text-primary)] truncate">
+                        {application.job?.title}
+                      </p>
+                      <ChevronRight size={16} className="text-[var(--color-text-secondary)] shrink-0" />
+                    </div>
+
+                    <div className="flex items-center gap-1 text-xs text-[var(--color-text-secondary)] mt-0.5">
+                      <MapPin size={12} className="shrink-0" />
+                      <span className="truncate">{application.job?.location}</span>
+                      <span className="shrink-0">·</span>
+                      <span className="shrink-0">{formatAppliedDate(application.createdAt)}</span>
+                    </div>
+
+                    <div className="mt-1.5">
+                      <StatusBadge status={application.status} />
+                    </div>
                   </div>
                 </div>
-
-                <StatusBadge status={application.status} />
-                <ChevronRight size={16} className="text-[var(--color-text-secondary)] shrink-0" />
-              </div>
-            ))}
-          </div>
-        )}
-      </Card>
+              ))}
+            </div>
+          )}
+        </Card>
+      </div>
     </div>
   );
 };
