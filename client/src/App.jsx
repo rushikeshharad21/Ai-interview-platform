@@ -11,18 +11,25 @@ import ManageJobs from "./pages/ManageJobs"
 import JobApplications from "./pages/JobApplications"
 import UpcomingInterviews from "./pages/UpcomingInterviews.jsx";
 import InterviewPreview from "./pages/InterviewPreview.jsx";
-import InterviewSession from "./pages/InterviewSession.jsx";
 import RecruiterInterviews from "./pages/RecruiterInterviews.jsx";
 import CandidateDashboard from "./pages/Dashboard.jsx";
 import RecruiterDashboard from "./pages/RecruiterDashboard.jsx";
 import AllApplications from "./pages/AllApplications.jsx";
 
 const InterviewResults = lazy(() => import("./pages/InterviewResults.jsx"));
+const InterviewSession = lazy(() => import("./pages/InterviewSession.jsx"));
 
 const ResultsPageFallback = () => (
   <div className="max-w-3xl mx-auto space-y-4">
     <div className="h-4 w-32 bg-[var(--color-surface)] rounded animate-pulse"></div>
     <div className="h-40 w-full bg-[var(--color-surface)] rounded-2xl animate-pulse"></div>
+  </div>
+);
+
+const SessionPageFallback = () => (
+  <div className="max-w-3xl mx-auto space-y-4">
+    <div className="h-4 w-32 bg-[var(--color-surface)] rounded animate-pulse"></div>
+    <div className="h-64 w-full bg-[var(--color-surface)] rounded-2xl animate-pulse"></div>
   </div>
 );
 
@@ -46,7 +53,14 @@ function App() {
           <Route path="/jobs/:id" element={<JobDetail />} />
           <Route path="/interviews" element={<UpcomingInterviews />} />
           <Route path="/interviews/:id/preview" element={<InterviewPreview />} />
-          <Route path="/interviews/:id/session" element={<InterviewSession />} />
+          <Route
+            path="/interviews/:id/session"
+            element={
+              <Suspense fallback={<SessionPageFallback />}>
+                <InterviewSession />
+              </Suspense>
+            }
+          />
           <Route
             path="/interviews/:id/results"
             element={
