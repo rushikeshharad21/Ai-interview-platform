@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react"
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
+import { GoogleOAuthProvider } from "@react-oauth/google"
 import ProtectedRoute from "./components/auth/ProtectedRoute"
 import Login from "./pages/Login"
 import Register from "./pages/Register"
@@ -38,14 +39,34 @@ const RoleBasedDashboard = () => {
   return user?.role === "recruiter" ? <RecruiterDashboard /> : <CandidateDashboard />
 }
 
+const GoogleAuthPage = ({ children }) => (
+  <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+    {children}
+  </GoogleOAuthProvider>
+)
+
 function App() {
   const user = useAuthStore((state) => state.user)
 
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route
+          path="/login"
+          element={
+            <GoogleAuthPage>
+              <Login />
+            </GoogleAuthPage>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <GoogleAuthPage>
+              <Register />
+            </GoogleAuthPage>
+          }
+        />
 
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<RoleBasedDashboard />} />
