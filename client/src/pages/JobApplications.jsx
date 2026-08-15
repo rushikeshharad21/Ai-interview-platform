@@ -21,6 +21,63 @@ const statusOptions = [
 
 const emptyScheduleForm = { scheduledAt: "", duration: 30, notes: "" }
 
+const ScheduleForm = ({ app, scheduleForm, onFieldChange, onSubmit, onCancel, scheduling, scheduleError }) => (
+  <div className="flex flex-col gap-3">
+    <p className="text-sm font-medium text-[var(--color-text-primary)]">
+      Schedule interview with {app.candidate?.name}
+    </p>
+
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <Input
+        label="Date & time"
+        type="datetime-local"
+        value={scheduleForm.scheduledAt}
+        onChange={(e) => onFieldChange("scheduledAt", e.target.value)}
+        disabled={scheduling}
+        required
+      />
+      <Input
+        label="Duration (minutes)"
+        type="number"
+        min={5}
+        value={scheduleForm.duration}
+        onChange={(e) => onFieldChange("duration", e.target.value)}
+        disabled={scheduling}
+      />
+    </div>
+
+    <Textarea
+      label="Notes (optional)"
+      rows={2}
+      placeholder="Anything the candidate should know before the interview"
+      value={scheduleForm.notes}
+      onChange={(e) => onFieldChange("notes", e.target.value)}
+      disabled={scheduling}
+    />
+
+    {scheduleError && (
+      <div role="alert" className="flex items-start gap-2 text-sm text-[var(--color-error)] bg-red-50 rounded-[var(--radius-control)] p-3">
+        <AlertCircle size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
+        <p>{scheduleError}</p>
+      </div>
+    )}
+
+    <div className="flex items-center gap-2">
+      <Button onClick={onSubmit} disabled={scheduling} className="flex items-center gap-1.5">
+        <Check size={14} />
+        {scheduling ? "Scheduling..." : "Confirm Schedule"}
+      </Button>
+      <button
+        onClick={onCancel}
+        disabled={scheduling}
+        className="text-sm text-[var(--color-text-secondary)] px-3 disabled:opacity-50"
+      >
+        Cancel
+      </button>
+    </div>
+  </div>
+)
+
 export default function JobApplications() {
   const { jobId } = useParams()
   const navigate = useNavigate()
@@ -149,9 +206,9 @@ export default function JobApplications() {
         </button>
 
         <Card>
-          <div className="flex flex-col items-center text-center py-8 gap-3">
+          <div role="alert" className="flex flex-col items-center text-center py-8 gap-3">
             <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center">
-              <AlertCircle size={24} className="text-[var(--color-error)]" />
+              <AlertCircle size={24} className="text-[var(--color-error)]" aria-hidden="true" />
             </div>
             <h1 className="text-lg font-semibold text-[var(--color-text-primary)]">
               Unable to Load Applications
@@ -184,8 +241,8 @@ export default function JobApplications() {
       </div>
 
       {statusError && (
-        <div className="flex items-start gap-2 text-sm text-[var(--color-error)] bg-red-50 rounded-[var(--radius-control)] p-3">
-          <AlertCircle size={16} className="mt-0.5 shrink-0" />
+        <div role="alert" className="flex items-start gap-2 text-sm text-[var(--color-error)] bg-red-50 rounded-[var(--radius-control)] p-3">
+          <AlertCircle size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
           <p>{statusError}</p>
         </div>
       )}
@@ -195,140 +252,152 @@ export default function JobApplications() {
           <p className="text-[var(--color-text-secondary)]">No applications yet</p>
         </div>
       ) : (
-        <Card className="p-0 overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-[var(--color-border)] text-left">
-                <th className="px-6 py-3.5 font-medium text-[var(--color-text-secondary)]">Candidate</th>
-                <th className="px-6 py-3.5 font-medium text-[var(--color-text-secondary)]">Applied on</th>
-                <th className="px-6 py-3.5 font-medium text-[var(--color-text-secondary)]">Status</th>
-                <th className="px-6 py-3.5 font-medium text-[var(--color-text-secondary)]">Update status</th>
-                <th className="px-6 py-3.5 font-medium text-[var(--color-text-secondary)]">Interview</th>
-              </tr>
-            </thead>
-            <tbody>
-              {applications.map((app) => (
-                <Fragment key={app._id}>
-                  <tr className="border-b border-[var(--color-border)] last:border-0">
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col">
-                        <span className="font-medium text-[var(--color-text-primary)]">
-                          {app.candidate?.name}
-                        </span>
-                        <span className="flex items-center gap-1 text-xs text-[var(--color-text-secondary)]">
-                          <Mail size={12} />
-                          {app.candidate?.email}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-[var(--color-text-secondary)]">
-                      {new Date(app.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4">
-                      <StatusBadge status={app.status} />
-                    </td>
-                    <td className="px-6 py-4 w-48">
-                      <Select
-                        options={statusOptions}
-                        value={app.status}
-                        onChange={(e) => handleStatusChange(app._id, e.target.value)}
-                        disabled={updatingId === app._id}
-                      />
-                    </td>
-                    <td className="px-6 py-4 w-56">
-                      {app.status === "interview_scheduled" ? (
-                        <span className="text-xs text-[var(--color-text-secondary)]">
-                          Already scheduled
-                        </span>
-                      ) : schedulingAppId === app._id ? (
-                        <button
-                          onClick={closeScheduleForm}
-                          className="flex items-center gap-1.5 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-accent)]"
-                        >
-                          <X size={14} />
-                          Cancel
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => openScheduleForm(app._id)}
-                          className="flex items-center gap-1.5 text-sm text-[var(--color-accent)] font-medium"
-                        >
-                          <CalendarPlus size={16} />
-                          Schedule Interview
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-
-                  {schedulingAppId === app._id && (
+        <>
+          {/* Desktop table — sm breakpoint and up */}
+          <Card className="hidden sm:block p-0 overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-[var(--color-border)] text-left">
+                  <th className="px-6 py-3.5 font-medium text-[var(--color-text-secondary)]">Candidate</th>
+                  <th className="px-6 py-3.5 font-medium text-[var(--color-text-secondary)]">Applied on</th>
+                  <th className="px-6 py-3.5 font-medium text-[var(--color-text-secondary)]">Status</th>
+                  <th className="px-6 py-3.5 font-medium text-[var(--color-text-secondary)]">Update status</th>
+                  <th className="px-6 py-3.5 font-medium text-[var(--color-text-secondary)]">Interview</th>
+                </tr>
+              </thead>
+              <tbody>
+                {applications.map((app) => (
+                  <Fragment key={app._id}>
                     <tr className="border-b border-[var(--color-border)] last:border-0">
-                      <td colSpan={5} className="px-6 py-4 bg-[var(--color-surface)]">
-                        <div className="flex flex-col gap-3 max-w-xl">
-                          <p className="text-sm font-medium text-[var(--color-text-primary)]">
-                            Schedule interview with {app.candidate?.name}
-                          </p>
-
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <Input
-                              label="Date & time"
-                              type="datetime-local"
-                              value={scheduleForm.scheduledAt}
-                              onChange={(e) => handleScheduleFieldChange("scheduledAt", e.target.value)}
-                              disabled={scheduling}
-                              required
-                            />
-                            <Input
-                              label="Duration (minutes)"
-                              type="number"
-                              min={5}
-                              value={scheduleForm.duration}
-                              onChange={(e) => handleScheduleFieldChange("duration", e.target.value)}
-                              disabled={scheduling}
-                            />
-                          </div>
-
-                          <Textarea
-                            label="Notes (optional)"
-                            rows={2}
-                            placeholder="Anything the candidate should know before the interview"
-                            value={scheduleForm.notes}
-                            onChange={(e) => handleScheduleFieldChange("notes", e.target.value)}
-                            disabled={scheduling}
-                          />
-
-                          {scheduleError && (
-                            <div className="flex items-start gap-2 text-sm text-[var(--color-error)] bg-red-50 rounded-[var(--radius-control)] p-3">
-                              <AlertCircle size={16} className="mt-0.5 shrink-0" />
-                              <p>{scheduleError}</p>
-                            </div>
-                          )}
-
-                          <div className="flex items-center gap-2">
-                            <Button
-                              onClick={() => handleScheduleSubmit(app._id)}
-                              disabled={scheduling}
-                              className="flex items-center gap-1.5"
-                            >
-                              <Check size={14} />
-                              {scheduling ? "Scheduling..." : "Confirm Schedule"}
-                            </Button>
-                            <button
-                              onClick={closeScheduleForm}
-                              disabled={scheduling}
-                              className="text-sm text-[var(--color-text-secondary)] px-3 disabled:opacity-50"
-                            >
-                              Cancel
-                            </button>
-                          </div>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col">
+                          <span className="font-medium text-[var(--color-text-primary)]">
+                            {app.candidate?.name}
+                          </span>
+                          <span className="flex items-center gap-1 text-xs text-[var(--color-text-secondary)]">
+                            <Mail size={12} />
+                            {app.candidate?.email}
+                          </span>
                         </div>
                       </td>
+                      <td className="px-6 py-4 text-[var(--color-text-secondary)]">
+                        {new Date(app.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4">
+                        <StatusBadge status={app.status} />
+                      </td>
+                      <td className="px-6 py-4 w-48">
+                        <Select
+                          options={statusOptions}
+                          value={app.status}
+                          onChange={(e) => handleStatusChange(app._id, e.target.value)}
+                          disabled={updatingId === app._id}
+                        />
+                      </td>
+                      <td className="px-6 py-4 w-56">
+                        {app.status === "interview_scheduled" ? (
+                          <span className="text-xs text-[var(--color-text-secondary)]">
+                            Already scheduled
+                          </span>
+                        ) : schedulingAppId === app._id ? (
+                          <button
+                            onClick={closeScheduleForm}
+                            className="flex items-center gap-1.5 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-accent)]"
+                          >
+                            <X size={14} />
+                            Cancel
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => openScheduleForm(app._id)}
+                            className="flex items-center gap-1.5 text-sm text-[var(--color-accent)] font-medium"
+                          >
+                            <CalendarPlus size={16} />
+                            Schedule Interview
+                          </button>
+                        )}
+                      </td>
                     </tr>
-                  )}
-                </Fragment>
-              ))}
-            </tbody>
-          </table>
-        </Card>
+
+                    {schedulingAppId === app._id && (
+                      <tr className="border-b border-[var(--color-border)] last:border-0">
+                        <td colSpan={5} className="px-6 py-4 bg-[var(--color-surface)]">
+                          <div className="max-w-xl">
+                            <ScheduleForm
+                              app={app}
+                              scheduleForm={scheduleForm}
+                              onFieldChange={handleScheduleFieldChange}
+                              onSubmit={() => handleScheduleSubmit(app._id)}
+                              onCancel={closeScheduleForm}
+                              scheduling={scheduling}
+                              scheduleError={scheduleError}
+                            />
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
+                ))}
+              </tbody>
+            </table>
+          </Card>
+
+          {/* Mobile cards — below sm breakpoint */}
+          <div className="sm:hidden flex flex-col gap-3">
+            {applications.map((app) => (
+              <Card key={app._id} className="flex flex-col gap-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-medium text-[var(--color-text-primary)] truncate">
+                      {app.candidate?.name}
+                    </p>
+                    <p className="flex items-center gap-1 text-xs text-[var(--color-text-secondary)] truncate">
+                      <Mail size={12} className="shrink-0" />
+                      <span className="truncate">{app.candidate?.email}</span>
+                    </p>
+                  </div>
+                  <StatusBadge status={app.status} />
+                </div>
+
+                <p className="text-xs text-[var(--color-text-secondary)]">
+                  Applied {new Date(app.createdAt).toLocaleDateString()}
+                </p>
+
+                <div className="pt-2 border-t border-[var(--color-border)]">
+                  <Select
+                    label="Update status"
+                    options={statusOptions}
+                    value={app.status}
+                    onChange={(e) => handleStatusChange(app._id, e.target.value)}
+                    disabled={updatingId === app._id}
+                  />
+                </div>
+
+                {app.status === "interview_scheduled" ? (
+                  <p className="text-xs text-[var(--color-text-secondary)]">Interview already scheduled</p>
+                ) : schedulingAppId === app._id ? (
+                  <ScheduleForm
+                    app={app}
+                    scheduleForm={scheduleForm}
+                    onFieldChange={handleScheduleFieldChange}
+                    onSubmit={() => handleScheduleSubmit(app._id)}
+                    onCancel={closeScheduleForm}
+                    scheduling={scheduling}
+                    scheduleError={scheduleError}
+                  />
+                ) : (
+                  <button
+                    onClick={() => openScheduleForm(app._id)}
+                    className="flex items-center justify-center gap-1.5 text-sm text-[var(--color-accent)] font-medium border border-[var(--color-accent)]/30 rounded-[var(--radius-control)] py-2"
+                  >
+                    <CalendarPlus size={16} />
+                    Schedule Interview
+                  </button>
+                )}
+              </Card>
+            ))}
+          </div>
+        </>
       )}
     </div>
   )
